@@ -3,7 +3,6 @@ package admin
 import (
 	"database/sql"
 	"fmt"
-	"log"
 	"net/http"
 	"os"
 	"path/filepath"
