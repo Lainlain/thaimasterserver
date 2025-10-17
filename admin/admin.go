@@ -172,8 +172,15 @@ func UploadImageHandler(c *gin.Context) {
 		return
 	}
 
-	// Return the file path (URL path for accessing the image)
-	imageURL := fmt.Sprintf("/uploads/%s", filename)
+	// Get the host from the request to build full URL
+	scheme := "https"
+	if c.Request.TLS == nil {
+		scheme = "http"
+	}
+	host := c.Request.Host
+	
+	// Return the full image URL (external URL with domain)
+	imageURL := fmt.Sprintf("%s://%s/uploads/%s", scheme, host, filename)
 	c.JSON(http.StatusOK, gin.H{
 		"success":   true,
 		"image_url": imageURL,
