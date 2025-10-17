@@ -12,6 +12,7 @@ import (
 	"thaimaster2d/slider"
 	"thaimaster2d/threed"
 	"thaimaster2d/twodhistory"
+	"thaimaster2d/version"
 
 	"github.com/gin-gonic/gin"
 )
@@ -152,6 +153,11 @@ func main() {
 		
 		// Image serving route (API endpoint to serve images)
 		r.GET("/api/images/:filename", admin.ServeImageHandler)
+		
+		// Version/Health check endpoint
+		r.GET("/api/version", func(c *gin.Context) {
+			c.JSON(200, version.GetBuildInfo())
+		})
 		
 		// Admin API routes for gifts
 		r.GET("/api/admin/gifts", func(c *gin.Context) {
