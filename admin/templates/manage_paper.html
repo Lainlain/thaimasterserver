@@ -449,8 +449,9 @@
                         </div>
                         <div class="type-actions">
                             <button class="btn" onclick="showAddImagesModal(${item.type.id})">➕ Add Images</button>
+                            <button class="btn btn-danger" onclick="removeAllImages(${item.type.id}, '${item.type.name}')">🗑️ Remove All Images</button>
                             <button class="btn" onclick="showEditTypeModal(${item.type.id})">✏️ Edit</button>
-                            <button class="btn btn-danger" onclick="deleteType(${item.type.id})">🗑️ Delete</button>
+                            <button class="btn btn-danger" onclick="deleteType(${item.type.id})">🗑️ Delete Type</button>
                         </div>
                     </div>
                     <div class="images-grid" id="images-${item.type.id}">
@@ -601,6 +602,67 @@
                 alert('Error deleting type: ' + error.message);
                 console.error('Error:', error);
             });
+        }
+
+        async function removeAllImages(typeId, typeName) {
+            if (!confirm(`Are you sure you want to remove ALL images from "${typeName}"?\n\nThis will delete all images but keep the paper type.`)) {
+                return;
+            }
+            
+            try {
+                // Fetch all images for this type
+                const response = await fetch(`/api/paper/types/${typeId}/images`);
+                if (!response.ok) {
+                    throw new Error('Failed to fetch images');
+                }
+                
+                const images = await response.json();
+                
+                if (images.length === 0) {
+                    alert('No images to delete for this type.');
+                    return;
+                }
+                
+                // Confirm again with count
+                if (!confirm(`Found ${images.length} images. Continue with deletion?`)) {
+                    return;
+                }
+                
+                // Delete each image
+                let successCount = 0;
+                let failCount = 0;
+                
+                for (const image of images) {
+                    try {
+                        const deleteResponse = await fetch(`/api/admin/paper/images/${image.id}`, {
+                            method: 'DELETE'
+                        });
+                        
+                        if (deleteResponse.ok) {
+                            successCount++;
+                        } else {
+                            failCount++;
+                        }
+                    } catch (error) {
+                        console.error('Error deleting image:', image.id, error);
+                        failCount++;
+                    }
+                }
+                
+                // Show result
+                if (failCount === 0) {
+                    alert(`Successfully removed all ${successCount} images from "${typeName}"!`);
+                } else {
+                    alert(`Removed ${successCount} images, but ${failCount} failed to delete.`);
+                }
+                
+                // Reload the types to show updated count
+                loadTypes();
+                
+            } catch (error) {
+                alert('Error removing images: ' + error.message);
+                console.error('Error:', error);
+            }
         }
 
         // Image upload handling

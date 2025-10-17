@@ -257,11 +257,11 @@ func main() {
 	})
 
 	// Start server
-	log.Println("🚀 Server starting on :8080")
-	log.Println("📡 SSE Stream available at: http://localhost:8080/api/lottery/stream")
-	log.Println("📮 POST lottery data to: http://localhost:8080/api/lottery/update")
-	log.Println("📜 History data at: http://localhost:8080/api/twodhistory")
-	if err := r.Run(":8080"); err != nil {
+	log.Println("🚀 Server starting on :4545")
+	log.Println("📡 SSE Stream available at: http://localhost:4545/api/lottery/stream")
+	log.Println("📮 POST lottery data to: http://localhost:4545/api/lottery/update")
+	log.Println("📜 History data at: http://localhost:4545/api/twodhistory")
+	if err := r.Run(":4545"); err != nil {
 		log.Fatal("Failed to start server:", err)
 	}
 }
