@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>App Configuration - Thai Master 2D Admin</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+        
+        .content {
+            padding: 40px;
+        }
+        
+        .nav-links {
+            margin-bottom: 30px;
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .nav-links a {
+            padding: 10px 20px;
+            background: #667eea;
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        
+        .nav-links a:hover {
+            background: #764ba2;
+            transform: translateY(-2px);
+        }
+        
+        .form-section {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+        
+        .form-section h3 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 18px;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        
+        .form-group input[type="text"],
+        .form-group textarea {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        .form-group textarea {
+            min-height: 80px;
+            resize: vertical;
+        }
+        
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .checkbox-group input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+        
+        .checkbox-group label {
+            margin: 0;
+            cursor: pointer;
+        }
+        
+        .btn-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+        }
+        
+        .btn {
+            padding: 14px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+            flex: 1;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+        
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+        
+        .info-box {
+            background: #e7f3ff;
+            border-left: 4px solid #2196F3;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .info-box p {
+            color: #0d47a1;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        
+        .warning-box {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .warning-box p {
+            color: #856404;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .current-info {
+            background: #e8f5e9;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .current-info p {
+            color: #2e7d32;
+            font-size: 14px;
+            margin: 5px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>⚙️ App Configuration</h1>
+            <p>Manage app version, updates, and maintenance</p>
+        </div>
+        
+        <div class="content">
+            <div class="nav-links">
+                <a href="/admin">📊 Dashboard</a>
+                <a href="/admin/sliders">🎨 Sliders</a>
+                <a href="/admin/gifts">🎁 Gifts</a>
+                <a href="/admin/threed">🎲 3D Results</a>
+            </div>
+
+            {{if .Config}}
+            <div class="current-info">
+                <p><strong>📱 Current Latest Version:</strong> {{.Config.LatestVersion}}</p>
+                <p><strong>📦 Minimum Version:</strong> {{.Config.MinimumVersion}}</p>
+                <p><strong>🔧 Maintenance Mode:</strong> {{if .Config.MaintenanceMode}}✅ Active{{else}}❌ Inactive{{end}}</p>
+                <p><strong>✅ App Enabled:</strong> {{if .Config.AppEnabled}}Yes{{else}}No{{end}}</p>
+            </div>
+            {{end}}
+
+            <form method="POST" action="/admin/appconfig/update">
+                <!-- Version Management -->
+                <div class="form-section">
+                    <h3>📱 Version Management</h3>
+                    
+                    <div class="form-group">
+                        <label for="latest_version">Latest Version *</label>
+                        <input type="text" id="latest_version" name="latest_version" 
+                               value="{{.Config.LatestVersion}}" 
+                               placeholder="1.0.0" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="minimum_version">Minimum Required Version *</label>
+                        <input type="text" id="minimum_version" name="minimum_version" 
+                               value="{{.Config.MinimumVersion}}" 
+                               placeholder="1.0.0" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="update_url">Update URL (Play Store/App Store) *</label>
+                        <input type="text" id="update_url" name="update_url" 
+                               value="{{.Config.UpdateURL}}" 
+                               placeholder="https://play.google.com/store/apps/details?id=com.thaimaster2d" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="update_message">Update Message</label>
+                        <textarea id="update_message" name="update_message" 
+                                  placeholder="🎉 New version available! Update now for better experience.">{{.Config.UpdateMessage}}</textarea>
+                    </div>
+                </div>
+
+                <!-- Update Settings -->
+                <div class="form-section">
+                    <h3>🔔 Update Settings</h3>
+                    
+                    <div class="form-group checkbox-group">
+                        <input type="checkbox" id="update_required" name="update_required" value="true"
+                               {{if .Config.UpdateRequired}}checked{{end}}>
+                        <label for="update_required">Update Required (Show update notification)</label>
+                    </div>
+                    
+                    <div class="form-group checkbox-group">
+                        <input type="checkbox" id="force_update" name="force_update" value="true"
+                               {{if .Config.ForceUpdate}}checked{{end}}>
+                        <label for="force_update">Force Update (Block app if version below minimum)</label>
+                    </div>
+
+                    <div class="warning-box">
+                        <p>⚠️ <strong>Warning:</strong> Force Update will prevent users with versions below the minimum from using the app. Use with caution!</p>
+                    </div>
+                </div>
+
+                <!-- Maintenance Mode -->
+                <div class="form-section">
+                    <h3>🔧 Maintenance Mode</h3>
+                    
+                    <div class="form-group checkbox-group">
+                        <input type="checkbox" id="maintenance_mode" name="maintenance_mode" value="true"
+                               {{if .Config.MaintenanceMode}}checked{{end}}>
+                        <label for="maintenance_mode">Enable Maintenance Mode</label>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="maintenance_message">Maintenance Message</label>
+                        <textarea id="maintenance_message" name="maintenance_message" 
+                                  placeholder="🔧 App is under maintenance. Please check back soon!">{{.Config.MaintenanceMessage}}</textarea>
+                    </div>
+
+                    <div class="warning-box">
+                        <p>⚠️ <strong>Warning:</strong> Enabling maintenance mode will prevent ALL users from accessing the app!</p>
+                    </div>
+                </div>
+
+                <!-- App Enable/Disable -->
+                <div class="form-section">
+                    <h3>✅ App Status</h3>
+                    
+                    <div class="form-group checkbox-group">
+                        <input type="checkbox" id="app_enabled" name="app_enabled" value="true"
+                               {{if .Config.AppEnabled}}checked{{end}}>
+                        <label for="app_enabled">App Enabled</label>
+                    </div>
+
+                    <div class="warning-box">
+                        <p>⚠️ <strong>Warning:</strong> Disabling the app will prevent ALL users from accessing it!</p>
+                    </div>
+                </div>
+
+                <div class="info-box">
+                    <p>💡 <strong>Version Format:</strong> Use semantic versioning (e.g., 1.0.0, 1.2.3, 2.0.0)</p>
+                    <p>💡 <strong>Priority:</strong> Maintenance Mode > App Disabled > Version Check</p>
+                </div>
+
+                <div class="btn-group">
+                    <button type="submit" class="btn btn-primary">💾 Save Configuration</button>
+                    <button type="button" onclick="window.location.href='/admin'" class="btn btn-secondary">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</body>
+</html>
