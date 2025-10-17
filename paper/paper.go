@@ -38,6 +38,57 @@ type PaperTypeWithImages struct {
 
 func InitDB(database *sql.DB) {
 	db = database
+	createTables()
+}
+
+func createTables() {
+	// Create paper_types table
+	_, err := db.Exec(`
+		CREATE TABLE IF NOT EXISTS paper_types (
+			id SERIAL PRIMARY KEY,
+			name VARCHAR(100) NOT NULL UNIQUE,
+			display_order INTEGER NOT NULL DEFAULT 0,
+			is_active BOOLEAN NOT NULL DEFAULT true,
+			created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+			updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+		)
+	`)
+	if err != nil {
+		panic("Failed to create paper_types table: " + err.Error())
+	}
+
+	// Create paper_images table
+	_, err = db.Exec(`
+		CREATE TABLE IF NOT EXISTS paper_images (
+			id SERIAL PRIMARY KEY,
+			type_id INTEGER NOT NULL REFERENCES paper_types(id) ON DELETE CASCADE,
+			image_url TEXT NOT NULL,
+			display_order INTEGER NOT NULL DEFAULT 0,
+			is_active BOOLEAN NOT NULL DEFAULT true,
+			created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+			updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+		)
+	`)
+	if err != nil {
+		panic("Failed to create paper_images table: " + err.Error())
+	}
+
+	// Create indexes
+	db.Exec(`CREATE INDEX IF NOT EXISTS idx_paper_images_type_id ON paper_images(type_id)`)
+	db.Exec(`CREATE INDEX IF NOT EXISTS idx_paper_images_display_order ON paper_images(display_order)`)
+	db.Exec(`CREATE INDEX IF NOT EXISTS idx_paper_types_display_order ON paper_types(display_order)`)
+
+	// Insert sample data if table is empty
+	var count int
+	db.QueryRow("SELECT COUNT(*) FROM paper_types").Scan(&count)
+	if count == 0 {
+		db.Exec(`
+			INSERT INTO paper_types (name, display_order) VALUES
+			('Myanmar News', 1),
+			('Thailand News', 2),
+			('International', 3)
+		`)
+	}
 }
 
 // Get all paper types with image count
