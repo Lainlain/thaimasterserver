@@ -178,7 +178,7 @@ func UploadImageHandler(c *gin.Context) {
 		scheme = "http"
 	}
 	host := c.Request.Host
-	
+
 	// Return the full image URL via API endpoint (not static /uploads)
 	imageURL := fmt.Sprintf("%s://%s/api/images/%s", scheme, host, filename)
 	c.JSON(http.StatusOK, gin.H{
