@@ -3,6 +3,7 @@ package admin
 import (
 	"database/sql"
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -495,6 +496,7 @@ func UpdateAppConfigHandler(c *gin.Context) {
 }
 
 // ServeImageHandler serves images from the uploads directory via API endpoint
+// ServeImageHandler serves images via API endpoint to bypass static file restrictions
 func ServeImageHandler(c *gin.Context) {
 	filename := c.Param("filename")
 	if filename == "" {
@@ -511,6 +513,6 @@ func ServeImageHandler(c *gin.Context) {
 		return
 	}
 
-	// Serve the file with appropriate content type
+	// Serve the file with appropriate content type (Gin handles this automatically)
 	c.File(filePath)
 }
