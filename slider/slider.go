@@ -31,13 +31,13 @@ func InitDB(database *sql.DB) {
 func createTable() {
 	query := `
 	CREATE TABLE IF NOT EXISTS sliders (
-		id SERIAL PRIMARY KEY,
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
 		image_link TEXT NOT NULL,
 		forward_link TEXT,
-		title VARCHAR(255),
+		title TEXT,
 		order_num INTEGER DEFAULT 0,
-		is_active BOOLEAN DEFAULT true,
-		created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+		is_active INTEGER DEFAULT 1,
+		created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 	);
 	CREATE INDEX IF NOT EXISTS idx_slider_active ON sliders(is_active);
 	CREATE INDEX IF NOT EXISTS idx_slider_order ON sliders(order_num);
@@ -55,7 +55,7 @@ func GetActiveSliders() ([]Slider, error) {
 	query := `
 		SELECT id, image_link, forward_link, title, order_num, is_active, created_at
 		FROM sliders
-		WHERE is_active = true
+		WHERE is_active = 1
 		ORDER BY order_num ASC, created_at DESC
 	`
 	rows, err := db.Query(query)

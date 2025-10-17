@@ -33,15 +33,15 @@ func InitDB(database *sql.DB) {
 func createTable() {
 	query := `
 	CREATE TABLE IF NOT EXISTS gifts (
-		id SERIAL PRIMARY KEY,
-		name VARCHAR(255) NOT NULL,
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		name TEXT NOT NULL,
 		image_link TEXT NOT NULL,
-		type VARCHAR(100) NOT NULL CHECK (type IN ('Daily', 'Weekly')),
+		type TEXT NOT NULL CHECK (type IN ('Daily', 'Weekly')),
 		description TEXT,
 		points INTEGER DEFAULT 0,
 		stock INTEGER DEFAULT 0,
-		is_active BOOLEAN DEFAULT true,
-		created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+		is_active INTEGER DEFAULT 1,
+		created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 	);
 	CREATE INDEX IF NOT EXISTS idx_gift_type ON gifts(type);
 	CREATE INDEX IF NOT EXISTS idx_gift_active ON gifts(is_active);

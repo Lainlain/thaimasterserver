@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	_ "github.com/lib/pq"
+	_ "github.com/mattn/go-sqlite3"
 )
 
 // TwoDHistory represents a single lottery history record
@@ -48,9 +48,13 @@ type LotteryData struct {
 }
 
 // InitDB initializes the database connection
-func InitDB(connectionString string) error {
+func InitDB(dbPath string) error {
 	var err error
-	db, err = sql.Open("postgres", connectionString)
+
+	log.Printf("📂 Opening database file: %s", dbPath)
+
+	// Open SQLite database (will create file if it doesn't exist)
+	db, err = sql.Open("sqlite3", dbPath)
 	if err != nil {
 		return fmt.Errorf("failed to open database: %w", err)
 	}
@@ -73,19 +77,19 @@ func InitDB(connectionString string) error {
 func createTable() error {
 	query := `
 	CREATE TABLE IF NOT EXISTS twodhistory (
-		id SERIAL PRIMARY KEY,
-		date VARCHAR(20) NOT NULL UNIQUE,
-		set1200 VARCHAR(20),
-		value1200 VARCHAR(20),
-		result1200 VARCHAR(20),
-		set430 VARCHAR(20),
-		value430 VARCHAR(20),
-		result430 VARCHAR(20),
-		modern930 VARCHAR(20),
-		internet930 VARCHAR(20),
-		modern200 VARCHAR(20),
-		internet200 VARCHAR(20),
-		created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		date TEXT NOT NULL UNIQUE,
+		set1200 TEXT,
+		value1200 TEXT,
+		result1200 TEXT,
+		set430 TEXT,
+		value430 TEXT,
+		result430 TEXT,
+		modern930 TEXT,
+		internet930 TEXT,
+		modern200 TEXT,
+		internet200 TEXT,
+		created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 	);
 	CREATE INDEX IF NOT EXISTS idx_twodhistory_date ON twodhistory(date DESC);
 	`

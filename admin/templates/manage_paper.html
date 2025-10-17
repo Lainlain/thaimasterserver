@@ -751,7 +751,7 @@
                     }
                     
                     const data = await response.json();
-                    uploadedUrls.push(`http://localhost:8080${data.image_url}`);
+                    uploadedUrls.push(data.image_url);
                     
                     uploaded++;
                     const progress = Math.round((uploaded / total) * 100);

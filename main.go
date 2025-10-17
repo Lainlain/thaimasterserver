@@ -1,11 +1,9 @@
 package main
 
 import (
-	"database/sql"
 	"fmt"
 	"log"
 	"os"
-	"strings"
 	"thaimaster2d/admin"
 	"thaimaster2d/appconfig"
 	"thaimaster2d/gift"
@@ -16,50 +14,7 @@ import (
 	"thaimaster2d/twodhistory"
 
 	"github.com/gin-gonic/gin"
-	_ "github.com/lib/pq"
 )
-
-// ensureDatabaseExists checks if the database exists and creates it if not
-func ensureDatabaseExists(dbURL string) error {
-	// Parse the database URL to get the database name
-	// Format: postgres://user:password@host:port/database?params
-	parts := strings.Split(dbURL, "/")
-	if len(parts) < 4 {
-		return fmt.Errorf("invalid database URL format")
-	}
-	
-	dbName := strings.Split(parts[3], "?")[0]
-	
-	// Connect to the default 'postgres' database to check/create our database
-	defaultURL := strings.Replace(dbURL, "/"+dbName, "/postgres", 1)
-	
-	db, err := sql.Open("postgres", defaultURL)
-	if err != nil {
-		return fmt.Errorf("failed to connect to postgres database: %w", err)
-	}
-	defer db.Close()
-	
-	// Check if database exists
-	var exists bool
-	query := `SELECT EXISTS(SELECT 1 FROM pg_database WHERE datname = $1)`
-	err = db.QueryRow(query, dbName).Scan(&exists)
-	if err != nil {
-		return fmt.Errorf("failed to check database existence: %w", err)
-	}
-	
-	if !exists {
-		log.Printf("📦 Database '%s' does not exist, creating...", dbName)
-		_, err = db.Exec(fmt.Sprintf("CREATE DATABASE %s", dbName))
-		if err != nil {
-			return fmt.Errorf("failed to create database: %w", err)
-		}
-		log.Printf("✅ Database '%s' created successfully!", dbName)
-	} else {
-		log.Printf("✅ Database '%s' already exists", dbName)
-	}
-	
-	return nil
-}
 
 func main() {
 	// Create Gin router
@@ -78,30 +33,20 @@ func main() {
 	})
 
 	// Initialize database
-	dbURL := os.Getenv("DATABASE_URL")
-	if dbURL == "" {
-		// Default local PostgreSQL connection
-		dbURL = "postgres://postgres:postgres@localhost:5432/thaimaster2d?sslmode=disable"
+	dbPath := os.Getenv("DATABASE_PATH")
+	if dbPath == "" {
+		// Default SQLite database file
+		dbPath = "./thaimaster2d.db"
 	}
 
 	log.Printf("🔌 Attempting database connection...")
-	log.Printf("📍 Database URL: %s", dbURL)
-	
-	// Ensure database exists (auto-create if not)
-	if err := ensureDatabaseExists(dbURL); err != nil {
-		log.Printf("⚠️  Could not ensure database exists: %v", err)
-		log.Printf("⚠️  Trying to connect anyway...")
-	}
-	
+	log.Printf("� Database file: %s", dbPath)
+
 	dbEnabled := false
-	if err := twodhistory.InitDB(dbURL); err != nil {
+	if err := twodhistory.InitDB(dbPath); err != nil {
 		log.Printf("❌ Database initialization failed: %v", err)
 		log.Println("⚠️  Continuing without database features...")
 		log.Println("⚠️  Admin routes and data APIs will not be available!")
-		log.Println("")
-		log.Println("💡 To fix this, make sure PostgreSQL is running:")
-		log.Println("   sudo systemctl start postgresql")
-		log.Println("   sudo systemctl enable postgresql")
 	} else {
 		defer twodhistory.CloseDB()
 		dbEnabled = true
