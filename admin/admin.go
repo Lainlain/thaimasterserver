@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -173,11 +174,14 @@ func UploadImageHandler(c *gin.Context) {
 	}
 
 	// Get the host from the request to build full URL
+	// Always use HTTPS since we're behind Cloudflare
 	scheme := "https"
-	if c.Request.TLS == nil {
-		scheme = "http"
-	}
 	host := c.Request.Host
+	
+	// If host has port number, remove it (Cloudflare handles the port)
+	if strings.Contains(host, ":") {
+		host = strings.Split(host, ":")[0]
+	}
 
 	// Return the full image URL via API endpoint (not static /uploads)
 	imageURL := fmt.Sprintf("%s://%s/api/images/%s", scheme, host, filename)
