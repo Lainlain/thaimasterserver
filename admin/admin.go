@@ -179,8 +179,8 @@ func UploadImageHandler(c *gin.Context) {
 	}
 	host := c.Request.Host
 	
-	// Return the full image URL (external URL with domain)
-	imageURL := fmt.Sprintf("%s://%s/uploads/%s", scheme, host, filename)
+	// Return the full image URL via API endpoint (not static /uploads)
+	imageURL := fmt.Sprintf("%s://%s/api/images/%s", scheme, host, filename)
 	c.JSON(http.StatusOK, gin.H{
 		"success":   true,
 		"image_url": imageURL,
@@ -492,4 +492,25 @@ func UpdateAppConfigHandler(c *gin.Context) {
 	}
 
 	c.Redirect(http.StatusFound, "/admin/appconfig?message=Configuration updated successfully")
+}
+
+// ServeImageHandler serves images from the uploads directory via API endpoint
+func ServeImageHandler(c *gin.Context) {
+	filename := c.Param("filename")
+	if filename == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Filename required"})
+		return
+	}
+
+	// Construct file path
+	filePath := filepath.Join("uploads", filename)
+
+	// Check if file exists
+	if _, err := os.Stat(filePath); os.IsNotExist(err) {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Image not found"})
+		return
+	}
+
+	// Serve the file with appropriate content type
+	c.File(filePath)
 }

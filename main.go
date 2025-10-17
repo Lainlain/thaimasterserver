@@ -148,7 +148,12 @@ func main() {
 
 		// Image upload routes
 		r.POST("/api/admin/upload-image", admin.UploadImageHandler)
-		r.DELETE("/api/admin/delete-image/:filename", admin.DeleteImageHandler) // Admin API routes for gifts
+		r.DELETE("/api/admin/delete-image/:filename", admin.DeleteImageHandler)
+		
+		// Image serving route (API endpoint to serve images)
+		r.GET("/api/images/:filename", admin.ServeImageHandler)
+		
+		// Admin API routes for gifts
 		r.GET("/api/admin/gifts", func(c *gin.Context) {
 			gifts, err := gift.GetAllGiftsForAdmin()
 			if err != nil {
