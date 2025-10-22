@@ -12,7 +12,6 @@ import (
 	"thaimaster2d/slider"
 	"thaimaster2d/threed"
 	"thaimaster2d/twodhistory"
-	"thaimaster2d/version"
 
 	"github.com/gin-gonic/gin"
 )
@@ -123,9 +122,6 @@ func main() {
 
 	// Admin routes
 	if dbEnabled {
-		// Serve uploaded files
-		r.Static("/uploads", "./uploads")
-
 		// Load HTML templates
 		r.LoadHTMLGlob("admin/templates/*.html")
 
@@ -151,12 +147,15 @@ func main() {
 		r.POST("/api/admin/upload-image", admin.UploadImageHandler)
 		r.DELETE("/api/admin/delete-image/:filename", admin.DeleteImageHandler)
 
-		// Image serving route (API endpoint to serve images)
-		r.GET("/api/images/:filename", admin.ServeImageHandler)
+		// Image serving route - serve from /uploads/ path
+		r.GET("/uploads/:filename", admin.ServeImageHandler)
 
 		// Version/Health check endpoint
 		r.GET("/api/version", func(c *gin.Context) {
-			c.JSON(200, version.GetBuildInfo())
+			c.JSON(200, gin.H{
+				"version": "1.0.0",
+				"service": "2D Expect Lottery API",
+			})
 		})
 
 		// Admin API routes for gifts

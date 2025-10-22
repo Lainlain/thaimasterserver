@@ -156,8 +156,13 @@ func UploadImageHandler(c *gin.Context) {
 		return
 	}
 
+	// Get uploads directory from env or use default
+	uploadsDir := os.Getenv("UPLOADS_PATH")
+	if uploadsDir == "" {
+		uploadsDir = "./uploads"
+	}
+	
 	// Create uploads directory if not exists
-	uploadsDir := "uploads"
 	if err := os.MkdirAll(uploadsDir, 0755); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create uploads directory"})
 		return
@@ -173,6 +178,8 @@ func UploadImageHandler(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save image"})
 		return
 	}
+	
+	log.Printf("💾 Image saved: %s (path: %s)", filename, filePath)
 
 	// Build URL dynamically based on the incoming request
 	// Detect HTTPS from multiple sources (direct TLS, proxy headers, or port)
@@ -214,8 +221,8 @@ func UploadImageHandler(c *gin.Context) {
 	
 	log.Printf("✅ Final URL scheme: %s://%s", scheme, host)
 	
-	// Return the full image URL via API endpoint (not static /uploads)
-	imageURL := fmt.Sprintf("%s://%s/api/images/%s", scheme, host, filename)
+	// Return the full image URL using /uploads/ path
+	imageURL := fmt.Sprintf("%s://%s/uploads/%s", scheme, host, filename)
 	c.JSON(http.StatusOK, gin.H{
 		"success":   true,
 		"image_url": imageURL,
@@ -538,10 +545,16 @@ func ServeImageHandler(c *gin.Context) {
 		return
 	}
 
-	// Construct file path - use . prefix for relative path from working directory
-	imagePath := filepath.Join(".", "uploads", filename)
+	// Get uploads directory - check env variable first, then use relative path
+	uploadsDir := os.Getenv("UPLOADS_PATH")
+	if uploadsDir == "" {
+		uploadsDir = "./uploads"
+	}
 	
-	log.Printf("📸 Serving image: %s (path: %s)", filename, imagePath)
+	// Construct file path
+	imagePath := filepath.Join(uploadsDir, filename)
+	
+	log.Printf("📸 Serving image: %s (uploads dir: %s, full path: %s)", filename, uploadsDir, imagePath)
 
 	// Check if file exists
 	if _, err := os.Stat(imagePath); os.IsNotExist(err) {
