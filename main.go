@@ -120,6 +120,9 @@ func main() {
 	r.GET("/api/appconfig", appconfig.GetAppConfig)
 	r.GET("/api/appconfig/check", appconfig.CheckVersion)
 
+	// Image serving route (public - must be accessible to all)
+	r.GET("/uploads/:filename", admin.ServeImageHandler)
+
 	// Admin routes
 	if dbEnabled {
 		// Load HTML templates
@@ -146,9 +149,6 @@ func main() {
 		// Image upload routes
 		r.POST("/api/admin/upload-image", admin.UploadImageHandler)
 		r.DELETE("/api/admin/delete-image/:filename", admin.DeleteImageHandler)
-
-		// Image serving route - serve from /uploads/ path
-		r.GET("/uploads/:filename", admin.ServeImageHandler)
 
 		// Version/Health check endpoint
 		r.GET("/api/version", func(c *gin.Context) {
