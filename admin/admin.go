@@ -161,7 +161,7 @@ func UploadImageHandler(c *gin.Context) {
 	if uploadsDir == "" {
 		uploadsDir = "./uploads"
 	}
-	
+
 	// Create uploads directory if not exists
 	if err := os.MkdirAll(uploadsDir, 0755); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create uploads directory"})
@@ -178,49 +178,49 @@ func UploadImageHandler(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save image"})
 		return
 	}
-	
+
 	log.Printf("💾 Image saved: %s (path: %s)", filename, filePath)
 
 	// Build URL dynamically based on the incoming request
 	// Detect HTTPS from multiple sources (direct TLS, proxy headers, or port)
 	scheme := "http"
-	
+
 	// Log all relevant headers for debugging
 	log.Printf("🔍 Image Upload - Host: %s, TLS: %v", c.Request.Host, c.Request.TLS != nil)
 	log.Printf("🔍 X-Forwarded-Proto: %s", c.GetHeader("X-Forwarded-Proto"))
 	log.Printf("🔍 CF-Visitor: %s", c.GetHeader("CF-Visitor"))
 	log.Printf("🔍 X-Forwarded-Ssl: %s", c.GetHeader("X-Forwarded-Ssl"))
-	
+
 	// Check 1: Direct TLS connection
 	if c.Request.TLS != nil {
 		scheme = "https"
 	}
-	
+
 	// Check 2: Proxy headers (Cloudflare, nginx, etc.)
 	forwardedProto := c.GetHeader("X-Forwarded-Proto")
 	if forwardedProto == "https" {
 		scheme = "https"
 	}
-	
+
 	// Check 3: Cloudflare specific header
 	cfVisitor := c.GetHeader("CF-Visitor")
 	if len(cfVisitor) > 0 && (cfVisitor == `{"scheme":"https"}` || strings.Contains(cfVisitor, `"scheme":"https"`)) {
 		scheme = "https"
 	}
-	
+
 	// Check 4: Standard forwarded header
 	if c.GetHeader("X-Forwarded-Ssl") == "on" {
 		scheme = "https"
 	}
-	
+
 	// Check 5: If host doesn't have port and not localhost, assume HTTPS (production CDN)
 	host := c.Request.Host
 	if !strings.Contains(host, ":") && !strings.Contains(host, "localhost") && !strings.Contains(host, "127.0.0.1") {
 		scheme = "https"
 	}
-	
+
 	log.Printf("✅ Final URL scheme: %s://%s", scheme, host)
-	
+
 	// Return the full image URL using /uploads/ path
 	imageURL := fmt.Sprintf("%s://%s/uploads/%s", scheme, host, filename)
 	c.JSON(http.StatusOK, gin.H{
@@ -550,10 +550,10 @@ func ServeImageHandler(c *gin.Context) {
 	if uploadsDir == "" {
 		uploadsDir = "./uploads"
 	}
-	
+
 	// Construct file path
 	imagePath := filepath.Join(uploadsDir, filename)
-	
+
 	log.Printf("📸 Serving image: %s (uploads dir: %s, full path: %s)", filename, uploadsDir, imagePath)
 
 	// Check if file exists
