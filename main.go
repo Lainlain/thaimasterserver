@@ -150,15 +150,15 @@ func main() {
 		// Image upload routes
 		r.POST("/api/admin/upload-image", admin.UploadImageHandler)
 		r.DELETE("/api/admin/delete-image/:filename", admin.DeleteImageHandler)
-		
+
 		// Image serving route (API endpoint to serve images)
 		r.GET("/api/images/:filename", admin.ServeImageHandler)
-		
+
 		// Version/Health check endpoint
 		r.GET("/api/version", func(c *gin.Context) {
 			c.JSON(200, version.GetBuildInfo())
 		})
-		
+
 		// Admin API routes for gifts
 		r.GET("/api/admin/gifts", func(c *gin.Context) {
 			gifts, err := gift.GetAllGiftsForAdmin()
@@ -264,11 +264,16 @@ func main() {
 		r.DELETE("/api/admin/paper/images/:id", paper.DeleteImage)
 	}
 
+	// Privacy Policy route (public)
+	r.GET("/privacy-policy", func(c *gin.Context) {
+		c.HTML(200, "privacy-policy.html", gin.H{})
+	})
+
 	// Health check
 	r.GET("/", func(c *gin.Context) {
 		c.JSON(200, gin.H{
 			"status":  "ok",
-			"message": "ThaiMaster2D Lottery API Server",
+			"message": "2D Expect Lottery API Server",
 			"version": "1.0.0",
 		})
 	})

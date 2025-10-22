@@ -3,11 +3,11 @@ package admin
 import (
 	"database/sql"
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 	"path/filepath"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -23,7 +23,7 @@ func InitDB(database *sql.DB) {
 // AdminDashboardHandler renders the admin dashboard home
 func AdminDashboardHandler(c *gin.Context) {
 	c.HTML(http.StatusOK, "dashboard.html", gin.H{
-		"title": "Admin Dashboard - ThaiMaster2D",
+		"title": "Admin Dashboard - 2D Expect",
 	})
 }
 
@@ -165,24 +165,23 @@ func UploadImageHandler(c *gin.Context) {
 	// Generate unique filename using timestamp
 	timestamp := time.Now().Unix()
 	filename := fmt.Sprintf("%d_%s", timestamp, filepath.Base(file.Filename))
-	filepath := filepath.Join(uploadsDir, filename)
+	filePath := filepath.Join(uploadsDir, filename)
 
 	// Save the file
-	if err := c.SaveUploadedFile(file, filepath); err != nil {
+	if err := c.SaveUploadedFile(file, filePath); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save image"})
 		return
 	}
 
-	// Get the host from the request to build full URL
-	// Always use HTTPS since we're behind Cloudflare
-	scheme := "https"
+	// Build URL dynamically based on the incoming request
+	// Use the same scheme and host as the request
+	scheme := "http"
+	if c.Request.TLS != nil || c.GetHeader("X-Forwarded-Proto") == "https" {
+		scheme = "https"
+	}
+	
 	host := c.Request.Host
 	
-	// If host has port number, remove it (Cloudflare handles the port)
-	if strings.Contains(host, ":") {
-		host = strings.Split(host, ":")[0]
-	}
-
 	// Return the full image URL via API endpoint (not static /uploads)
 	imageURL := fmt.Sprintf("%s://%s/api/images/%s", scheme, host, filename)
 	c.JSON(http.StatusOK, gin.H{
@@ -507,15 +506,19 @@ func ServeImageHandler(c *gin.Context) {
 		return
 	}
 
-	// Construct file path
-	filePath := filepath.Join("uploads", filename)
+	// Construct file path - use . prefix for relative path from working directory
+	imagePath := filepath.Join(".", "uploads", filename)
+	
+	log.Printf("📸 Serving image: %s (path: %s)", filename, imagePath)
 
 	// Check if file exists
-	if _, err := os.Stat(filePath); os.IsNotExist(err) {
+	if _, err := os.Stat(imagePath); os.IsNotExist(err) {
+		log.Printf("❌ Image not found: %s", imagePath)
 		c.JSON(http.StatusNotFound, gin.H{"error": "Image not found"})
 		return
 	}
 
 	// Serve the file with appropriate content type (Gin handles this automatically)
-	c.File(filePath)
+	log.Printf("✅ Serving image successfully: %s", filename)
+	c.File(imagePath)
 }
