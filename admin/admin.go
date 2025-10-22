@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -174,13 +175,44 @@ func UploadImageHandler(c *gin.Context) {
 	}
 
 	// Build URL dynamically based on the incoming request
-	// Use the same scheme and host as the request
+	// Detect HTTPS from multiple sources (direct TLS, proxy headers, or port)
 	scheme := "http"
-	if c.Request.TLS != nil || c.GetHeader("X-Forwarded-Proto") == "https" {
+	
+	// Log all relevant headers for debugging
+	log.Printf("🔍 Image Upload - Host: %s, TLS: %v", c.Request.Host, c.Request.TLS != nil)
+	log.Printf("🔍 X-Forwarded-Proto: %s", c.GetHeader("X-Forwarded-Proto"))
+	log.Printf("🔍 CF-Visitor: %s", c.GetHeader("CF-Visitor"))
+	log.Printf("🔍 X-Forwarded-Ssl: %s", c.GetHeader("X-Forwarded-Ssl"))
+	
+	// Check 1: Direct TLS connection
+	if c.Request.TLS != nil {
 		scheme = "https"
 	}
 	
+	// Check 2: Proxy headers (Cloudflare, nginx, etc.)
+	forwardedProto := c.GetHeader("X-Forwarded-Proto")
+	if forwardedProto == "https" {
+		scheme = "https"
+	}
+	
+	// Check 3: Cloudflare specific header
+	cfVisitor := c.GetHeader("CF-Visitor")
+	if len(cfVisitor) > 0 && (cfVisitor == `{"scheme":"https"}` || strings.Contains(cfVisitor, `"scheme":"https"`)) {
+		scheme = "https"
+	}
+	
+	// Check 4: Standard forwarded header
+	if c.GetHeader("X-Forwarded-Ssl") == "on" {
+		scheme = "https"
+	}
+	
+	// Check 5: If host doesn't have port and not localhost, assume HTTPS (production CDN)
 	host := c.Request.Host
+	if !strings.Contains(host, ":") && !strings.Contains(host, "localhost") && !strings.Contains(host, "127.0.0.1") {
+		scheme = "https"
+	}
+	
+	log.Printf("✅ Final URL scheme: %s://%s", scheme, host)
 	
 	// Return the full image URL via API endpoint (not static /uploads)
 	imageURL := fmt.Sprintf("%s://%s/api/images/%s", scheme, host, filename)
