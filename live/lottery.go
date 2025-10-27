@@ -11,7 +11,25 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// LotteryData represents the lottery information matching the original API format
+// LotteryDataInput represents incoming data with old JSON key format from API runner
+type LotteryDataInput struct {
+	Date        string `json:"date"`
+	Live        string `json:"live"`
+	Status      string `json:"status"`
+	Set1200     string `json:"1200set"`
+	Value1200   string `json:"1200value"`
+	Result1200  string `json:"1200"`
+	Set430      string `json:"430set"`
+	Value430    string `json:"430value"`
+	Result430   string `json:"430"`
+	Modern930   string `json:"930modern"`
+	Internet930 string `json:"930internet"`
+	Modern200   string `json:"200modern"`
+	Internet200 string `json:"200internet"`
+	UpdateTime  string `json:"updatetime"`
+}
+
+// LotteryData represents the lottery information with new JSON key format for output
 type LotteryData struct {
 	Date        string `json:"date"`
 	Live        string `json:"live"`
@@ -28,6 +46,27 @@ type LotteryData struct {
 	Internet200 string `json:"t0200_internet"`
 	UpdateTime  string `json:"updatetime"`
 	ViewCount   int    `json:"viewCount"`
+}
+
+// ToLotteryData converts LotteryDataInput to LotteryData
+func (input *LotteryDataInput) ToLotteryData() *LotteryData {
+	return &LotteryData{
+		Date:        input.Date,
+		Live:        input.Live,
+		Status:      input.Status,
+		Set1200:     input.Set1200,
+		Value1200:   input.Value1200,
+		Result1200:  input.Result1200,
+		Set430:      input.Set430,
+		Value430:    input.Value430,
+		Result430:   input.Result430,
+		Modern930:   input.Modern930,
+		Internet930: input.Internet930,
+		Modern200:   input.Modern200,
+		Internet200: input.Internet200,
+		UpdateTime:  input.UpdateTime,
+		ViewCount:   0, // Will be set by server
+	}
 }
 
 // HistoryInserter is a callback function type for inserting history
@@ -71,7 +110,7 @@ func Init() {
 
 // UpdateLotteryData handles POST requests to update lottery data
 func UpdateLotteryData(c *gin.Context) {
-	var newData LotteryData
+	var inputData LotteryDataInput
 
 	// Read and parse JSON body
 	body, err := io.ReadAll(c.Request.Body)
@@ -80,20 +119,23 @@ func UpdateLotteryData(c *gin.Context) {
 		return
 	}
 
-	if err := json.Unmarshal(body, &newData); err != nil {
+	if err := json.Unmarshal(body, &inputData); err != nil {
 		c.JSON(400, gin.H{"error": "Invalid JSON format", "details": err.Error()})
 		return
 	}
 
+	// Transform input data to output format
+	newData := inputData.ToLotteryData()
+
 	// Update current data
 	dataMutex.Lock()
-	currentData = &newData
+	currentData = newData
 	dataMutex.Unlock()
 
 	log.Printf("📊 Lottery data updated - Live: %s, Status: %s", newData.Live, newData.Status)
 
 	// Check if we should insert to history database (16:30-16:35 GMT+6:30)
-	checkAndInsertHistory(&newData)
+	checkAndInsertHistory(newData)
 
 	// Broadcast to all SSE clients
 	broadcastUpdate()
