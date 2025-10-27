@@ -120,9 +120,8 @@ func main() {
 	r.GET("/api/appconfig", appconfig.GetAppConfig)
 	r.GET("/api/appconfig/check", appconfig.CheckVersion)
 
-	// Image serving route (public - must be accessible to all)
-	// Use /api/images/ to bypass Cloudflare static file restrictions
-	r.GET("/api/images/:filename", admin.ServeImageHandler)
+	// Image serving route - static files from uploads directory
+	r.Static("/uploads", "./uploads")
 
 	// Admin routes
 	if dbEnabled {

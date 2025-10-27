@@ -221,10 +221,10 @@ func UploadImageHandler(c *gin.Context) {
 
 	log.Printf("✅ Final URL scheme: %s://%s", scheme, host)
 
-	// Return the full image URL using /api/images/ path (bypasses Cloudflare restrictions)
-	imageURL := fmt.Sprintf("%s://%s/api/images/%s", scheme, host, filename)
+	// Return the full image URL using /uploads/ path
+	imageURL := fmt.Sprintf("%s://%s/uploads/%s", scheme, host, filename)
 	log.Printf("📸 Generated image URL: %s", imageURL)
-	
+
 	c.JSON(http.StatusOK, gin.H{
 		"success":   true,
 		"image_url": imageURL,
