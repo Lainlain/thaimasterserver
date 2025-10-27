@@ -16,16 +16,16 @@ type LotteryData struct {
 	Date        string `json:"date"`
 	Live        string `json:"live"`
 	Status      string `json:"status"`
-	Set1200     string `json:"1200set"`
-	Value1200   string `json:"1200value"`
-	Result1200  string `json:"1200"`
-	Set430      string `json:"430set"`
-	Value430    string `json:"430value"`
-	Result430   string `json:"430"`
-	Modern930   string `json:"930modern"`
-	Internet930 string `json:"930internet"`
-	Modern200   string `json:"200modern"`
-	Internet200 string `json:"200internet"`
+	Set1200     string `json:"t1200_set"`
+	Value1200   string `json:"t1200_val"`
+	Result1200  string `json:"t1200_result"`
+	Set430      string `json:"t0430_set"`
+	Value430    string `json:"t0430_val"`
+	Result430   string `json:"t0430_result"`
+	Modern930   string `json:"t0930_modern"`
+	Internet930 string `json:"t0930_internet"`
+	Modern200   string `json:"t0200_modern"`
+	Internet200 string `json:"t0200_internet"`
 	UpdateTime  string `json:"updatetime"`
 	ViewCount   int    `json:"viewCount"`
 }

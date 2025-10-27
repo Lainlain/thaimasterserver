@@ -91,30 +91,30 @@ func main() {
 		log.Println("✅ History auto-insert enabled (16:30-16:35 GMT+6:30)")
 	}
 
-	// Routes
-	r.POST("/api/lottery/update", live.UpdateLotteryData)
-	r.GET("/api/lottery/stream", live.StreamLotteryData)
-	r.GET("/api/lottery/current", live.GetCurrentData)
+	// Routes - Game API (rebranded from lottery)
+	r.POST("/api/game/update", live.UpdateLotteryData)
+	r.GET("/api/game/stream", live.StreamLotteryData)
+	r.GET("/api/game/current", live.GetCurrentData)
 
-	// History routes
-	r.GET("/api/twodhistory", twodhistory.GetHistoryHandler)
-	r.POST("/api/twodhistory/check", twodhistory.CheckAndInsertHandler)
+	// History routes (rebranded)
+	r.GET("/api/game/history", twodhistory.GetHistoryHandler)
+	r.POST("/api/game/history/check", twodhistory.CheckAndInsertHandler)
 
-	// Gift routes
-	r.GET("/api/gifts", gift.GetGiftsHandler)
+	// Rewards routes (rebranded from gifts)
+	r.GET("/api/game/rewards", gift.GetGiftsHandler)
 
-	// Slider routes
-	r.GET("/api/sliders", slider.GetSlidersHandler)
+	// Banners routes (rebranded from sliders)
+	r.GET("/api/game/banners", slider.GetSlidersHandler)
 
 	// 3D routes
-	r.GET("/api/threed", threed.GetAllResults)
-	r.POST("/api/threed", threed.CreateResult)
-	r.PUT("/api/threed", threed.UpdateResult)
-	r.DELETE("/api/threed", threed.DeleteResult)
+	r.GET("/api/game/3d", threed.GetAllResults)
+	r.POST("/api/game/3d", threed.CreateResult)
+	r.PUT("/api/game/3d", threed.UpdateResult)
+	r.DELETE("/api/game/3d", threed.DeleteResult)
 
-	// Paper routes (public)
-	r.GET("/api/paper/types", paper.GetAllTypes)
-	r.GET("/api/paper/types/:type_id/images", paper.GetImagesByType)
+	// Guides routes (rebranded from paper)
+	r.GET("/api/game/guides/types", paper.GetAllTypes)
+	r.GET("/api/game/guides/types/:type_id/images", paper.GetImagesByType)
 
 	// App Config routes (public)
 	r.GET("/api/appconfig", appconfig.GetAppConfig)
@@ -279,9 +279,9 @@ func main() {
 
 	// Start server
 	log.Println("🚀 Server starting on :4545")
-	log.Println("📡 SSE Stream available at: http://localhost:4545/api/lottery/stream")
-	log.Println("📮 POST lottery data to: http://localhost:4545/api/lottery/update")
-	log.Println("📜 History data at: http://localhost:4545/api/twodhistory")
+	log.Println("📡 SSE Stream available at: http://localhost:4545/api/game/stream")
+	log.Println("📮 POST game data to: http://localhost:4545/api/game/update")
+	log.Println("📜 History data at: http://localhost:4545/api/game/history")
 	if err := r.Run(":4545"); err != nil {
 		log.Fatal("Failed to start server:", err)
 	}
