@@ -1,0 +1,35 @@
+# Database files
+*.db
+*.db-shm
+*.db-wal
+thaimaster2d.db
+
+# Uploads directory
+uploads/
+
+# Build artifacts
+*.exe
+masterserver
+thaimasterserver
+new2dserver
+2dexpectprivacy
+
+# Test binaries
+*.test
+*.out
+
+# Go workspace file
+go.work
+
+# Dependency directories
+vendor/
+
+# Logs
+*.log
+server.log
+server_test.log
+
+# Temporary files
+tmp/
+temp/
+*.tmp
