@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"syscall"
 	"thaimaster2d/admin"
 	"thaimaster2d/appconfig"
 	"thaimaster2d/gift"
@@ -17,6 +18,10 @@ import (
 )
 
 func main() {
+	// Set umask to 0022 so files are created with correct permissions
+	// This means new files will be 644 and directories 755
+	syscall.Umask(0022)
+
 	// Create Gin router
 	r := gin.Default()
 

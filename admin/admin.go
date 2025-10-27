@@ -168,6 +168,11 @@ func UploadImageHandler(c *gin.Context) {
 		return
 	}
 
+	// Force uploads directory to 755 (some systems change it)
+	if err := os.Chmod(uploadsDir, 0755); err != nil {
+		log.Printf("⚠️  Warning: Could not set directory permissions: %v", err)
+	}
+
 	// Generate unique filename using timestamp
 	timestamp := time.Now().Unix()
 	filename := fmt.Sprintf("%d_%s", timestamp, filepath.Base(file.Filename))
@@ -183,6 +188,8 @@ func UploadImageHandler(c *gin.Context) {
 	if err := os.Chmod(filePath, 0644); err != nil {
 		log.Printf("⚠️  Warning: Could not set file permissions: %v", err)
 	}
+
+	log.Printf("💾 Image saved: %s (path: %s, perms: 644)", filename, filePath)
 
 	log.Printf("💾 Image saved: %s (path: %s)", filename, filePath)
 
