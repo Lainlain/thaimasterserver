@@ -162,7 +162,7 @@ func UploadImageHandler(c *gin.Context) {
 		uploadsDir = "./uploads"
 	}
 
-	// Create uploads directory if not exists
+	// Create uploads directory if not exists with 755 permissions
 	if err := os.MkdirAll(uploadsDir, 0755); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create uploads directory"})
 		return
@@ -177,6 +177,11 @@ func UploadImageHandler(c *gin.Context) {
 	if err := c.SaveUploadedFile(file, filePath); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save image"})
 		return
+	}
+
+	// Set file permissions to 644 (readable by everyone)
+	if err := os.Chmod(filePath, 0644); err != nil {
+		log.Printf("⚠️  Warning: Could not set file permissions: %v", err)
 	}
 
 	log.Printf("💾 Image saved: %s (path: %s)", filename, filePath)
