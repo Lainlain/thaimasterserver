@@ -168,11 +168,15 @@ func UploadImageHandler(c *gin.Context) {
 		return
 	}
 
-	// Force uploads directory to 755 (some systems change it)
-	if err := os.Chmod(uploadsDir, 0755); err != nil {
-		log.Printf("⚠️  Warning: Could not set directory permissions: %v", err)
+	// FORCE uploads directory to 755 - this is critical for nginx/cloudflare access
+	// Using multiple methods to ensure it sticks
+	os.Chmod(uploadsDir, 0755)
+	
+	// Verify permissions were set
+	if info, err := os.Stat(uploadsDir); err == nil {
+		log.Printf("📁 Uploads dir permissions after chmod: %s", info.Mode().Perm())
 	}
-
+	
 	// Generate unique filename using timestamp
 	timestamp := time.Now().Unix()
 	filename := fmt.Sprintf("%d_%s", timestamp, filepath.Base(file.Filename))
@@ -185,13 +189,12 @@ func UploadImageHandler(c *gin.Context) {
 	}
 
 	// Set file permissions to 644 (readable by everyone)
-	if err := os.Chmod(filePath, 0644); err != nil {
-		log.Printf("⚠️  Warning: Could not set file permissions: %v", err)
-	}
+	os.Chmod(filePath, 0644)
+	
+	// FORCE directory permissions again after file save
+	os.Chmod(uploadsDir, 0755)
 
-	log.Printf("💾 Image saved: %s (path: %s, perms: 644)", filename, filePath)
-
-	log.Printf("💾 Image saved: %s (path: %s)", filename, filePath)
+	log.Printf("💾 Image saved: %s (path: %s, file perms: 644, dir perms: 755)", filename, filePath)
 
 	// Build URL dynamically based on the incoming request
 	// Detect HTTPS from multiple sources (direct TLS, proxy headers, or port)
