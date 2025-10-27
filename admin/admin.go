@@ -221,8 +221,10 @@ func UploadImageHandler(c *gin.Context) {
 
 	log.Printf("✅ Final URL scheme: %s://%s", scheme, host)
 
-	// Return the full image URL using /uploads/ path
-	imageURL := fmt.Sprintf("%s://%s/uploads/%s", scheme, host, filename)
+	// Return the full image URL using /api/images/ path (bypasses Cloudflare restrictions)
+	imageURL := fmt.Sprintf("%s://%s/api/images/%s", scheme, host, filename)
+	log.Printf("📸 Generated image URL: %s", imageURL)
+	
 	c.JSON(http.StatusOK, gin.H{
 		"success":   true,
 		"image_url": imageURL,
@@ -562,6 +564,11 @@ func ServeImageHandler(c *gin.Context) {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Image not found"})
 		return
 	}
+
+	// NO CACHE - Always serve fresh
+	c.Header("Cache-Control", "no-cache, no-store, must-revalidate")
+	c.Header("Pragma", "no-cache")
+	c.Header("Expires", "0")
 
 	// Serve the file with appropriate content type (Gin handles this automatically)
 	log.Printf("✅ Serving image successfully: %s", filename)
