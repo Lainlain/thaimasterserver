@@ -33,3 +33,6 @@ server_test.log
 tmp/
 temp/
 *.tmp
+
+#Firebase files
+dexpect-2be84-firebase-adminsdk-fbsvc-520abe0b4f.json
