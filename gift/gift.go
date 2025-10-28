@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"log"
 	"net/http"
+	"thaimaster2d/fcm"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -142,6 +143,14 @@ func UpdateGift(gift Gift) error {
 		return err
 	}
 	log.Printf("✅ Gift updated: %s", gift.Name)
+
+	// Send FCM notification about gift availability
+	go func() {
+		if err := fcm.SendGiftAvailableNotification(gift.Name); err != nil {
+			log.Printf("⚠️ Failed to send FCM notification for gift '%s': %v", gift.Name, err)
+		}
+	}()
+
 	return nil
 }
 

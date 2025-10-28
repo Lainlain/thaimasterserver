@@ -1,61 +1,56 @@
-nohup: ignoring input
 [GIN-debug] [WARNING] Creating an Engine instance with the Logger and Recovery middleware already attached.
 
 [GIN-debug] [WARNING] Running in "debug" mode. Switch to "release" mode in production.
  - using env:	export GIN_MODE=release
  - using code:	gin.SetMode(gin.ReleaseMode)
 
-2025/10/17 23:44:41 🔌 Attempting database connection...
-2025/10/17 23:44:41 � Database file: ./thaimaster2d.db
-2025/10/17 23:44:41 📂 Opening database file: ./thaimaster2d.db
-2025/10/17 23:44:41 ✅ Database connected and table created successfully
-2025/10/17 23:44:41 ✅ Database connected successfully!
-2025/10/17 23:44:41 ✅ Gifts table ready
-2025/10/17 23:44:41 ✅ Sliders table ready
-2025/10/17 23:44:41 ✅ app_config table ready
-2025/10/17 23:44:41 ✅ All database modules initialized!
-2025/10/17 23:44:41 ✅ Live package initialized with default data
-2025/10/17 23:44:41 ✅ History inserter callback registered
-2025/10/17 23:44:41 ✅ History auto-insert enabled (16:30-16:35 GMT+6:30)
-[GIN-debug] POST   /api/lottery/update       --> thaimaster2d/live.UpdateLotteryData (4 handlers)
-[GIN-debug] GET    /api/lottery/stream       --> thaimaster2d/live.StreamLotteryData (4 handlers)
-[GIN-debug] GET    /api/lottery/current      --> thaimaster2d/live.GetCurrentData (4 handlers)
-[GIN-debug] GET    /api/twodhistory          --> thaimaster2d/twodhistory.GetHistoryHandler (4 handlers)
-[GIN-debug] POST   /api/twodhistory/check    --> thaimaster2d/twodhistory.CheckAndInsertHandler (4 handlers)
-[GIN-debug] GET    /api/gifts                --> thaimaster2d/gift.GetGiftsHandler (4 handlers)
-[GIN-debug] GET    /api/sliders              --> thaimaster2d/slider.GetSlidersHandler (4 handlers)
-[GIN-debug] GET    /api/threed               --> thaimaster2d/threed.GetAllResults (4 handlers)
-[GIN-debug] POST   /api/threed               --> thaimaster2d/threed.CreateResult (4 handlers)
-[GIN-debug] PUT    /api/threed               --> thaimaster2d/threed.UpdateResult (4 handlers)
-[GIN-debug] DELETE /api/threed               --> thaimaster2d/threed.DeleteResult (4 handlers)
-[GIN-debug] GET    /api/paper/types          --> thaimaster2d/paper.GetAllTypes (4 handlers)
-[GIN-debug] GET    /api/paper/types/:type_id/images --> thaimaster2d/paper.GetImagesByType (4 handlers)
-[GIN-debug] GET    /api/appconfig            --> thaimaster2d/appconfig.GetAppConfig (4 handlers)
-[GIN-debug] GET    /api/appconfig/check      --> thaimaster2d/appconfig.CheckVersion (4 handlers)
+2025/10/28 22:27:30 🔌 Attempting database connection...
+2025/10/28 22:27:30 � Database file: ./thaimaster2d.db
+2025/10/28 22:27:30 📂 Opening database file: ./thaimaster2d.db
+2025/10/28 22:27:30 ✅ Database connected and table created successfully
+2025/10/28 22:27:30 ✅ Database connected successfully!
+2025/10/28 22:27:30 ✅ Gifts table ready
+2025/10/28 22:27:30 ✅ Sliders table ready
+2025/10/28 22:27:30 ✅ All database modules initialized!
+2025/10/28 22:27:30 ✅ Live package initialized with default data
+2025/10/28 22:27:30 ✅ Firebase Cloud Messaging initialized
+2025/10/28 22:27:30 ✅ History inserter callback registered
+2025/10/28 22:27:30 ✅ History auto-insert enabled (16:30-16:35 GMT+6:30)
+[GIN-debug] POST   /api/game/update          --> thaimaster2d/live.UpdateLotteryData (4 handlers)
+[GIN-debug] GET    /api/game/stream          --> thaimaster2d/live.StreamLotteryData (4 handlers)
+[GIN-debug] GET    /api/game/current         --> thaimaster2d/live.GetCurrentData (4 handlers)
+[GIN-debug] GET    /api/game/history         --> thaimaster2d/twodhistory.GetHistoryHandler (4 handlers)
+[GIN-debug] POST   /api/game/history/check   --> thaimaster2d/twodhistory.CheckAndInsertHandler (4 handlers)
+[GIN-debug] GET    /api/game/rewards         --> thaimaster2d/gift.GetGiftsHandler (4 handlers)
+[GIN-debug] GET    /api/game/banners         --> thaimaster2d/slider.GetSlidersHandler (4 handlers)
+[GIN-debug] GET    /api/game/3d              --> thaimaster2d/threed.GetAllResults (4 handlers)
+[GIN-debug] POST   /api/game/3d              --> thaimaster2d/threed.CreateResult (4 handlers)
+[GIN-debug] PUT    /api/game/3d              --> thaimaster2d/threed.UpdateResult (4 handlers)
+[GIN-debug] DELETE /api/game/3d              --> thaimaster2d/threed.DeleteResult (4 handlers)
+[GIN-debug] GET    /api/game/guides/types    --> thaimaster2d/paper.GetAllTypes (4 handlers)
+[GIN-debug] GET    /api/game/guides/types/:type_id/images --> thaimaster2d/paper.GetImagesByType (4 handlers)
 [GIN-debug] GET    /uploads/*filepath        --> github.com/gin-gonic/gin.(*RouterGroup).createStaticHandler.func1 (4 handlers)
 [GIN-debug] HEAD   /uploads/*filepath        --> github.com/gin-gonic/gin.(*RouterGroup).createStaticHandler.func1 (4 handlers)
 [GIN-debug] Loaded HTML Templates (13): 
-	- edit_slider.html
+	- manage_gifts.html
 	- manage_paper.html
-	- manage_sliders.html
-	- manage_threed.html
-	- create_slider.html
+	- create_threed.html
 	- dashboard.html
 	- edit_gift.html
 	- edit_threed.html
-	- manage_gifts.html
+	- manage_sliders.html
+	- manage_threed.html
+	- privacy-policy.html
 	- 
-	- app_config.html
 	- create_gift.html
-	- create_threed.html
+	- create_slider.html
+	- edit_slider.html
 
 [GIN-debug] GET    /admin                    --> thaimaster2d/admin.AdminDashboardHandler (4 handlers)
 [GIN-debug] GET    /admin/gifts              --> thaimaster2d/admin.ManageGiftsPageHandler (4 handlers)
 [GIN-debug] GET    /admin/sliders            --> thaimaster2d/admin.ManageSlidersPageHandler (4 handlers)
 [GIN-debug] GET    /admin/threed             --> thaimaster2d/admin.ManageThreeDPageHandler (4 handlers)
 [GIN-debug] GET    /admin/paper              --> thaimaster2d/admin.ManagePaperPageHandler (4 handlers)
-[GIN-debug] GET    /admin/appconfig          --> thaimaster2d/admin.AppConfigPageHandler (4 handlers)
-[GIN-debug] POST   /admin/appconfig/update   --> thaimaster2d/admin.UpdateAppConfigHandler (4 handlers)
 [GIN-debug] GET    /admin/gifts/create       --> thaimaster2d/admin.CreateGiftPageHandler (4 handlers)
 [GIN-debug] GET    /admin/sliders/create     --> thaimaster2d/admin.CreateSliderPageHandler (4 handlers)
 [GIN-debug] GET    /admin/threed/create      --> thaimaster2d/admin.CreateThreeDPageHandler (4 handlers)
@@ -67,16 +62,17 @@ nohup: ignoring input
 [GIN-debug] POST   /admin/threed/delete      --> thaimaster2d/admin.DeleteThreeDHandler (4 handlers)
 [GIN-debug] POST   /api/admin/upload-image   --> thaimaster2d/admin.UploadImageHandler (4 handlers)
 [GIN-debug] DELETE /api/admin/delete-image/:filename --> thaimaster2d/admin.DeleteImageHandler (4 handlers)
-[GIN-debug] GET    /api/admin/gifts          --> main.main.func3 (4 handlers)
+[GIN-debug] GET    /api/version              --> main.main.func3 (4 handlers)
+[GIN-debug] GET    /api/admin/gifts          --> main.main.func4 (4 handlers)
 [GIN-debug] GET    /api/admin/gifts/:id      --> thaimaster2d/admin.GetGiftByIDHandler (4 handlers)
-[GIN-debug] POST   /api/admin/gifts          --> main.main.func4 (4 handlers)
-[GIN-debug] PUT    /api/admin/gifts/:id      --> main.main.func5 (4 handlers)
-[GIN-debug] DELETE /api/admin/gifts/:id      --> main.main.func6 (4 handlers)
-[GIN-debug] GET    /api/admin/sliders        --> main.main.func7 (4 handlers)
+[GIN-debug] POST   /api/admin/gifts          --> main.main.func5 (4 handlers)
+[GIN-debug] PUT    /api/admin/gifts/:id      --> main.main.func6 (4 handlers)
+[GIN-debug] DELETE /api/admin/gifts/:id      --> main.main.func7 (4 handlers)
+[GIN-debug] GET    /api/admin/sliders        --> main.main.func8 (4 handlers)
 [GIN-debug] GET    /api/admin/sliders/:id    --> thaimaster2d/admin.GetSliderByIDHandler (4 handlers)
-[GIN-debug] POST   /api/admin/sliders        --> main.main.func8 (4 handlers)
-[GIN-debug] PUT    /api/admin/sliders/:id    --> main.main.func9 (4 handlers)
-[GIN-debug] DELETE /api/admin/sliders/:id    --> main.main.func10 (4 handlers)
+[GIN-debug] POST   /api/admin/sliders        --> main.main.func9 (4 handlers)
+[GIN-debug] PUT    /api/admin/sliders/:id    --> main.main.func10 (4 handlers)
+[GIN-debug] DELETE /api/admin/sliders/:id    --> main.main.func11 (4 handlers)
 [GIN-debug] GET    /api/admin/paper/types    --> thaimaster2d/paper.GetAllTypesWithImages (4 handlers)
 [GIN-debug] POST   /api/admin/paper/types    --> thaimaster2d/paper.CreateType (4 handlers)
 [GIN-debug] PUT    /api/admin/paper/types/:id --> thaimaster2d/paper.UpdateType (4 handlers)
@@ -85,13 +81,30 @@ nohup: ignoring input
 [GIN-debug] POST   /api/admin/paper/images/batch --> thaimaster2d/paper.BatchCreateImages (4 handlers)
 [GIN-debug] PUT    /api/admin/paper/images/:id --> thaimaster2d/paper.UpdateImage (4 handlers)
 [GIN-debug] DELETE /api/admin/paper/images/:id --> thaimaster2d/paper.DeleteImage (4 handlers)
-[GIN-debug] GET    /                         --> main.main.func11 (4 handlers)
-2025/10/17 23:44:41 🚀 Server starting on :4545
-2025/10/17 23:44:41 📡 SSE Stream available at: http://localhost:4545/api/lottery/stream
-2025/10/17 23:44:41 📮 POST lottery data to: http://localhost:4545/api/lottery/update
-2025/10/17 23:44:41 📜 History data at: http://localhost:4545/api/twodhistory
+[GIN-debug] GET    /privacy-policy           --> main.main.func12 (4 handlers)
+[GIN-debug] GET    /                         --> main.main.func13 (4 handlers)
+2025/10/28 22:27:30 🚀 Server starting on :4545
+2025/10/28 22:27:30 📡 SSE Stream available at: http://localhost:4545/api/game/stream
+2025/10/28 22:27:30 📮 POST game data to: http://localhost:4545/api/game/update
+2025/10/28 22:27:30 📜 History data at: http://localhost:4545/api/game/history
 [GIN-debug] [WARNING] You trusted all proxies, this is NOT safe. We recommend you to set a value.
 Please check https://github.com/gin-gonic/gin/blob/master/docs/doc.md#dont-trust-all-proxies for details.
 [GIN-debug] Listening and serving HTTP on :4545
-[GIN-debug] [ERROR] listen tcp :4545: bind: address already in use
-2025/10/17 23:44:41 Failed to start server:listen tcp :4545: bind: address already in use
+[GIN] 2025/10/28 - 22:27:59 | 200 |    1.812894ms |       127.0.0.1 | GET      "/admin/gifts"
+[GIN] 2025/10/28 - 22:27:59 | 200 |     633.033µs |       127.0.0.1 | GET      "/api/admin/gifts"
+[GIN] 2025/10/28 - 22:27:59 | 304 |      68.761µs |       127.0.0.1 | GET      "/uploads/1761666834_Screenshot_20250911-202110.png"
+[GIN] 2025/10/28 - 22:27:59 | 304 |      32.498µs |       127.0.0.1 | GET      "/uploads/1761666621_Screenshot_2025-09-26-08-28-14-726_com.mmvip.lucky.jpg"
+[GIN] 2025/10/28 - 22:27:59 | 304 |      49.144µs |       127.0.0.1 | GET      "/uploads/1761666328_IMG_20250926_074042_868.jpg"
+[GIN] 2025/10/28 - 22:27:59 | 304 |      30.604µs |       127.0.0.1 | GET      "/uploads/1761665123_IMG_20250926_074042_883.jpg"
+[GIN] 2025/10/28 - 22:27:59 | 404 |       1.134µs |       127.0.0.1 | GET      "/api/images/1761116231_Screenshot_2025-09-26-08-27-54-563_com.mmvip.lucky.jpg"
+[GIN] 2025/10/28 - 22:27:59 | 404 |      16.969µs |       127.0.0.1 | GET      "/uploads/1760721459_IMG_20250926_074042_883.jpg"
+[GIN] 2025/10/28 - 22:28:01 | 200 |    1.106815ms |       127.0.0.1 | GET      "/admin/gifts/edit/12"
+[GIN] 2025/10/28 - 22:28:01 | 200 |       136.4µs |       127.0.0.1 | GET      "/api/admin/gifts/12"
+2025/10/28 22:28:03 ✅ Gift updated: GGGGG
+[GIN] 2025/10/28 - 22:28:03 | 200 |   19.841805ms |       127.0.0.1 | PUT      "/api/admin/gifts/12"
+[GIN] 2025/10/28 - 22:28:04 | 200 |    1.019411ms |       127.0.0.1 | GET      "/admin/gifts"
+[GIN] 2025/10/28 - 22:28:04 | 200 |     151.961µs |       127.0.0.1 | GET      "/api/admin/gifts"
+[GIN] 2025/10/28 - 22:28:04 | 404 |       2.011µs |       127.0.0.1 | GET      "/api/images/1761116231_Screenshot_2025-09-26-08-27-54-563_com.mmvip.lucky.jpg"
+[GIN] 2025/10/28 - 22:28:04 | 404 |      10.556µs |       127.0.0.1 | GET      "/uploads/1760721459_IMG_20250926_074042_883.jpg"
+2025/10/28 22:28:06 ✅ FCM notification sent successfully: projects/dexpect-2be84/messages/936709951476386748
+[GIN] 2025/10/28 - 22:51:22 | 200 |     7.48176ms |       127.0.0.1 | GET      "/privacy-policy"

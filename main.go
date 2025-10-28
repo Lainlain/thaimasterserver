@@ -6,7 +6,7 @@ import (
 	"os"
 	"syscall"
 	"thaimaster2d/admin"
-	"thaimaster2d/appconfig"
+	"thaimaster2d/fcm"
 	"thaimaster2d/gift"
 	"thaimaster2d/live"
 	"thaimaster2d/paper"
@@ -63,13 +63,19 @@ func main() {
 		slider.InitDB(db)
 		admin.InitDB(db)
 		threed.InitDB(db)
-		appconfig.InitDB(db)
 		paper.InitDB(db)
 		log.Println("✅ All database modules initialized!")
 	}
 
 	// Initialize live package
 	live.Init()
+
+	// Initialize Firebase Cloud Messaging
+	firebasePath := "./dexpect-2be84-firebase-adminsdk-fbsvc-520abe0b4f.json"
+	if err := fcm.InitFCM(firebasePath); err != nil {
+		log.Printf("⚠️ Warning: Firebase FCM initialization failed: %v", err)
+		log.Println("⚠️ Gift notifications will not be sent")
+	}
 
 	// Register history inserter callback if database is enabled
 	if dbEnabled {
@@ -121,10 +127,6 @@ func main() {
 	r.GET("/api/game/guides/types", paper.GetAllTypes)
 	r.GET("/api/game/guides/types/:type_id/images", paper.GetImagesByType)
 
-	// App Config routes (public)
-	r.GET("/api/appconfig", appconfig.GetAppConfig)
-	r.GET("/api/appconfig/check", appconfig.CheckVersion)
-
 	// Image serving route - static files from uploads directory
 	r.Static("/uploads", "./uploads")
 
@@ -139,8 +141,6 @@ func main() {
 		r.GET("/admin/sliders", admin.ManageSlidersPageHandler)
 		r.GET("/admin/threed", admin.ManageThreeDPageHandler)
 		r.GET("/admin/paper", admin.ManagePaperPageHandler)
-		r.GET("/admin/appconfig", admin.AppConfigPageHandler)
-		r.POST("/admin/appconfig/update", admin.UpdateAppConfigHandler)
 		r.GET("/admin/gifts/create", admin.CreateGiftPageHandler)
 		r.GET("/admin/sliders/create", admin.CreateSliderPageHandler)
 		r.GET("/admin/threed/create", admin.CreateThreeDPageHandler)
@@ -273,13 +273,9 @@ func main() {
 		c.HTML(200, "privacy-policy.html", gin.H{})
 	})
 
-	// Health check
+	// Landing page
 	r.GET("/", func(c *gin.Context) {
-		c.JSON(200, gin.H{
-			"status":  "ok",
-			"message": "2D Expect Lottery API Server",
-			"version": "1.0.0",
-		})
+		c.HTML(200, "index.html", nil)
 	})
 
 	// Start server

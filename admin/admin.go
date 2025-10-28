@@ -171,12 +171,12 @@ func UploadImageHandler(c *gin.Context) {
 	// FORCE uploads directory to 755 - this is critical for nginx/cloudflare access
 	// Using multiple methods to ensure it sticks
 	os.Chmod(uploadsDir, 0755)
-	
+
 	// Verify permissions were set
 	if info, err := os.Stat(uploadsDir); err == nil {
 		log.Printf("📁 Uploads dir permissions after chmod: %s", info.Mode().Perm())
 	}
-	
+
 	// Generate unique filename using timestamp
 	timestamp := time.Now().Unix()
 	filename := fmt.Sprintf("%d_%s", timestamp, filepath.Base(file.Filename))
@@ -190,7 +190,7 @@ func UploadImageHandler(c *gin.Context) {
 
 	// Set file permissions to 644 (readable by everyone)
 	os.Chmod(filePath, 0644)
-	
+
 	// FORCE directory permissions again after file save
 	os.Chmod(uploadsDir, 0755)
 
@@ -446,111 +446,6 @@ func DeleteThreeDHandler(c *gin.Context) {
 	}
 
 	c.Redirect(http.StatusFound, "/admin/threed?message=Result deleted successfully")
-}
-
-// AppConfigPageHandler renders the app config page
-func AppConfigPageHandler(c *gin.Context) {
-	var config struct {
-		ID                 int
-		LatestVersion      string
-		MinimumVersion     string
-		UpdateRequired     bool
-		UpdateURL          string
-		UpdateMessage      string
-		MaintenanceMode    bool
-		MaintenanceMessage string
-		ForceUpdate        bool
-		AppEnabled         bool
-		CreatedAt          time.Time
-		UpdatedAt          time.Time
-	}
-
-	query := `
-	SELECT 
-		id, latest_version, minimum_version, update_required, 
-		update_url, update_message, maintenance_mode, maintenance_message,
-		force_update, app_enabled, created_at, updated_at
-	FROM app_config 
-	ORDER BY id DESC 
-	LIMIT 1
-	`
-	err := db.QueryRow(query).Scan(
-		&config.ID,
-		&config.LatestVersion,
-		&config.MinimumVersion,
-		&config.UpdateRequired,
-		&config.UpdateURL,
-		&config.UpdateMessage,
-		&config.MaintenanceMode,
-		&config.MaintenanceMessage,
-		&config.ForceUpdate,
-		&config.AppEnabled,
-		&config.CreatedAt,
-		&config.UpdatedAt,
-	)
-
-	if err != nil && err != sql.ErrNoRows {
-		c.HTML(http.StatusInternalServerError, "app_config.html", gin.H{
-			"error": "Failed to load config",
-		})
-		return
-	}
-
-	c.HTML(http.StatusOK, "app_config.html", gin.H{
-		"title":  "App Configuration - Admin",
-		"Config": config,
-	})
-}
-
-// UpdateAppConfigHandler handles updating the app config
-func UpdateAppConfigHandler(c *gin.Context) {
-	latestVersion := c.PostForm("latest_version")
-	minimumVersion := c.PostForm("minimum_version")
-	updateURL := c.PostForm("update_url")
-	updateMessage := c.PostForm("update_message")
-	maintenanceMessage := c.PostForm("maintenance_message")
-
-	updateRequired := c.PostForm("update_required") == "true"
-	forceUpdate := c.PostForm("force_update") == "true"
-	maintenanceMode := c.PostForm("maintenance_mode") == "true"
-	appEnabled := c.PostForm("app_enabled") == "true"
-
-	query := `
-	UPDATE app_config SET
-		latest_version = $1,
-		minimum_version = $2,
-		update_required = $3,
-		update_url = $4,
-		update_message = $5,
-		maintenance_mode = $6,
-		maintenance_message = $7,
-		force_update = $8,
-		app_enabled = $9,
-		updated_at = CURRENT_TIMESTAMP
-	WHERE id = (SELECT id FROM app_config ORDER BY id DESC LIMIT 1)
-	`
-
-	_, err := db.Exec(
-		query,
-		latestVersion,
-		minimumVersion,
-		updateRequired,
-		updateURL,
-		updateMessage,
-		maintenanceMode,
-		maintenanceMessage,
-		forceUpdate,
-		appEnabled,
-	)
-
-	if err != nil {
-		c.HTML(http.StatusInternalServerError, "app_config.html", gin.H{
-			"error": "Failed to update config: " + err.Error(),
-		})
-		return
-	}
-
-	c.Redirect(http.StatusFound, "/admin/appconfig?message=Configuration updated successfully")
 }
 
 // ServeImageHandler serves images from the uploads directory via API endpoint
