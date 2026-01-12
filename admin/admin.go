@@ -16,6 +16,7 @@ import (
 
 var db *sql.DB
 
+// aaaa
 // InitDB initializes the database connection for admin
 func InitDB(database *sql.DB) {
 	db = database
