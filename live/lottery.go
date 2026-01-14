@@ -49,6 +49,7 @@ type LotteryData struct {
 	ViewCount   int    `json:"viewCount"`
 }
 
+// restore
 // ToLotteryData converts LotteryDataInput to LotteryData
 func (input *LotteryDataInput) ToLotteryData() *LotteryData {
 	return &LotteryData{
