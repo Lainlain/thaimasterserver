@@ -11,6 +11,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// "update"
 // LotteryDataInput represents incoming data with old JSON key format from API runner
 type LotteryDataInput struct {
 	Date        string `json:"date"`
