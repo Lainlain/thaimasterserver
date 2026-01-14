@@ -116,7 +116,7 @@ func GetAllGiftsForAdmin() ([]Gift, error) {
 func InsertGift(gift Gift) error {
 	query := `
 		INSERT INTO gifts (name, image_link, type, description, points, stock, is_active)
-		VALUES ($1, $2, $3, $4, $5, $6, $7)
+		VALUES (?, ?, ?, ?, ?, ?, ?)
 	`
 	_, err := db.Exec(query, gift.Name, gift.ImageLink, gift.Type,
 		gift.Description, gift.Points, gift.Stock, gift.IsActive)
@@ -132,9 +132,9 @@ func InsertGift(gift Gift) error {
 func UpdateGift(gift Gift) error {
 	query := `
 		UPDATE gifts
-		SET name = $1, image_link = $2, type = $3, description = $4,
-		    points = $5, stock = $6, is_active = $7
-		WHERE id = $8
+		SET name = ?, image_link = ?, type = ?, description = ?,
+		    points = ?, stock = ?, is_active = ?
+		WHERE id = ?
 	`
 	_, err := db.Exec(query, gift.Name, gift.ImageLink, gift.Type,
 		gift.Description, gift.Points, gift.Stock, gift.IsActive, gift.ID)
@@ -156,7 +156,7 @@ func UpdateGift(gift Gift) error {
 
 // DeleteGift deletes a gift
 func DeleteGift(id int) error {
-	query := `DELETE FROM gifts WHERE id = $1`
+	query := `DELETE FROM gifts WHERE id = ?`
 	_, err := db.Exec(query, id)
 	if err != nil {
 		log.Printf("❌ Error deleting gift: %v", err)

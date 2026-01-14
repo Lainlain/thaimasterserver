@@ -2,146 +2,66 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>{{ .title }}</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
-            min-height: 100vh;
-            padding: 20px;
-        }
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-        }
-        header {
-            background: rgba(255, 255, 255, 0.95);
-            padding: 20px 30px;
-            border-radius: 10px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            margin-bottom: 30px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        h1 {
-            color: #1e3c72;
-            font-size: 28px;
-        }
-        .btn {
-            padding: 10px 20px;
-            background: #1e3c72;
-            color: white;
-            text-decoration: none;
-            border-radius: 6px;
-            font-weight: 500;
-            transition: background 0.3s ease;
-            border: none;
-            cursor: pointer;
-        }
-        .btn:hover {
-            background: #2a5298;
-        }
-        .btn-success {
-            background: #28a745;
-        }
-        .btn-success:hover {
-            background: #218838;
-        }
-        .btn-danger {
-            background: #dc3545;
-        }
-        .btn-danger:hover {
-            background: #c82333;
-        }
-        .btn-small {
-            padding: 6px 12px;
-            font-size: 13px;
-        }
-        .content {
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 12px;
-            padding: 30px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-        }
-        th, td {
-            padding: 12px;
-            text-align: left;
-            border-bottom: 1px solid #ddd;
-        }
-        th {
-            background: #f8f9fa;
-            color: #1e3c72;
-            font-weight: 600;
-        }
-        tr:hover {
-            background: #f8f9fa;
-        }
-        .gift-image {
-            width: 60px;
-            height: 60px;
-            object-fit: cover;
-            border-radius: 6px;
-        }
-        .badge {
-            display: inline-block;
-            padding: 4px 10px;
-            border-radius: 12px;
-            font-size: 12px;
-            font-weight: 500;
-        }
-        .badge-active {
-            background: #d4edda;
-            color: #155724;
-        }
-        .badge-inactive {
-            background: #f8d7da;
-            color: #721c24;
-        }
-        .actions {
-            display: flex;
-            gap: 8px;
-        }
-        .loading {
-            text-align: center;
-            padding: 40px;
-            color: #666;
-        }
-        .empty {
-            text-align: center;
-            padding: 60px;
-            color: #999;
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f5f5; min-height: 100vh; padding-bottom: 20px; }
+        .header { background: #0D47A1; padding: 16px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); position: sticky; top: 0; z-index: 100; }
+        .header-content { display: flex; justify-content: space-between; align-items: center; }
+        h1 { color: #fff; font-size: 18px; font-weight: 600; }
+        .btn { padding: 8px 14px; background: #fff; color: #0D47A1; text-decoration: none; border-radius: 6px; font-weight: 500; font-size: 13px; border: none; cursor: pointer; transition: opacity 0.2s; touch-action: manipulation; }
+        .btn:active { opacity: 0.7; }
+        .btn-success { background: #4CAF50; color: white; }
+        .btn-danger { background: #f44336; color: white; }
+        .btn-small { padding: 6px 10px; font-size: 12px; }
+        .gift-list { list-style: none; }
+        .gift-item { background: #fff; margin: 8px 12px; padding: 12px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); display: flex; gap: 12px; align-items: center; }
+        .gift-image { width: 60px; height: 60px; object-fit: cover; border-radius: 6px; flex-shrink: 0; }
+        .gift-info { flex: 1; min-width: 0; }
+        .gift-name { font-size: 15px; font-weight: 600; color: #212121; margin-bottom: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .gift-meta { font-size: 12px; color: #757575; margin-bottom: 4px; }
+        .badge { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 500; }
+        .badge-active { background: #E8F5E9; color: #2E7D32; }
+        .badge-inactive { background: #FFEBEE; color: #C62828; }
+        .actions { display: flex; gap: 6px; flex-shrink: 0; }
+        .loading, .empty { text-align: center; padding: 40px 20px; color: #757575; }
+        .empty-icon { font-size: 48px; margin-bottom: 12px; opacity: 0.3; }
+        .header-actions { display: flex; gap: 8px; }
+        .desktop-table { display: none; }
+        @media (min-width: 768px) {
+            .gift-list { display: none; }
+            .desktop-table { display: block; margin: 16px; background: #fff; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+            table { width: 100%; border-collapse: collapse; }
+            th, td { padding: 12px 16px; text-align: left; border-bottom: 1px solid #e0e0e0; }
+            th { background: #f5f5f5; color: #0D47A1; font-weight: 600; font-size: 13px; }
+            tr:hover { background: #f8f8f8; }
+            .gift-name { white-space: normal; }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1>🎁 Manage Gifts</h1>
-            <div>
-                <a href="/admin" class="btn" style="margin-right: 10px;">← Dashboard</a>
-                <a href="/admin/gifts/create" class="btn btn-success">+ Add New Gift</a>
+    <div class="header">
+        <div class="header-content">
+            <h1>Manage Gifts</h1>
+            <div class="header-actions">
+                <a href="/admin" class="btn btn-small">‹ Back</a>
+                <a href="/admin/gifts/create" class="btn btn-success btn-small">+ Add</a>
             </div>
-        </header>
+        </div>
+    </div>
 
-        <div class="content">
-            <div id="loading" class="loading">Loading gifts...</div>
-            <div id="empty" class="empty" style="display: none;">
-                <p style="font-size: 48px;">🎁</p>
-                <h3>No gifts yet</h3>
-                <p>Click "Add New Gift" to create your first gift item.</p>
-            </div>
+    <div class="content">
+        <div id="loading" class="loading">Loading...</div>
+        <div id="empty" class="empty" style="display: none;">
+            <div class="empty-icon">📦</div>
+            <h3>No gifts yet</h3>
+            <p style="margin-top: 8px; font-size: 14px;">Add your first gift item</p>
+        </div>
+        
+        <ul id="giftsList" class="gift-list" style="display: none;"></ul>
+
+        <div class="desktop-table">
             <table id="giftsTable" style="display: none;">
                 <thead>
                     <tr>
@@ -149,14 +69,11 @@
                         <th>Image</th>
                         <th>Name</th>
                         <th>Type</th>
-                        <th>Points</th>
-                        <th>Stock</th>
                         <th>Status</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
-                <tbody id="giftsBody">
-                </tbody>
+                <tbody id="giftsTableBody"></tbody>
             </table>
         </div>
     </div>
@@ -164,61 +81,68 @@
     <script>
         async function loadGifts() {
             try {
-                const response = await fetch('/api/admin/gifts');
-                const gifts = await response.json();
+                const res = await fetch('/api/admin/gifts');
+                const gifts = await res.json();
                 
-                const loading = document.getElementById('loading');
-                const empty = document.getElementById('empty');
-                const table = document.getElementById('giftsTable');
-                const tbody = document.getElementById('giftsBody');
-
-                loading.style.display = 'none';
-
+                document.getElementById('loading').style.display = 'none';
+                
                 if (gifts.length === 0) {
-                    empty.style.display = 'block';
+                    document.getElementById('empty').style.display = 'block';
                     return;
                 }
 
+                const list = document.getElementById('giftsList');
+                list.style.display = 'block';
+                list.innerHTML = gifts.map(gift => `
+                    <li class="gift-item">
+                        <img src="${gift.image_link || gift.image_url || ''}" class="gift-image" alt="${gift.name}" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%22 height=%22100%22><rect fill=%22%23ddd%22 width=%22100%22 height=%22100%22/></svg>'">
+                        <div class="gift-info">
+                            <div class="gift-name">${gift.name}</div>
+                            <div class="gift-meta">${gift.type || 'General'} | ${gift.points || 0} pts</div>
+                            <span class="badge ${gift.is_active ? 'badge-active' : 'badge-inactive'}">
+                                ${gift.is_active ? 'Active' : 'Inactive'}
+                            </span>
+                        </div>
+                        <div class="actions">
+                            <a href="/admin/gifts/edit/${gift.id}" class="btn btn-small">Edit</a>
+                            <button onclick="deleteGift(${gift.id})" class="btn btn-danger btn-small">Del</button>
+                        </div>
+                    </li>
+                `).join('');
+
+                const table = document.getElementById('giftsTable');
+                const tbody = document.getElementById('giftsTableBody');
                 table.style.display = 'table';
                 tbody.innerHTML = gifts.map(gift => `
                     <tr>
                         <td>${gift.id}</td>
-                        <td><img src="${gift.image_link}" alt="${gift.name}" class="gift-image" onerror="this.src='https://via.placeholder.com/60'"></td>
-                        <td><strong>${gift.name}</strong><br><small style="color: #666;">${gift.description || 'No description'}</small></td>
-                        <td>${gift.type}</td>
-                        <td>${gift.points}</td>
-                        <td>${gift.stock}</td>
-                        <td><span class="badge badge-${gift.is_active ? 'active' : 'inactive'}">${gift.is_active ? 'Active' : 'Inactive'}</span></td>
+                        <td><img src="${gift.image_link || gift.image_url || ''}" class="gift-image" alt="${gift.name}" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%22 height=%22100%22><rect fill=%22%23ddd%22 width=%22100%22 height=%22100%22/></svg>'"></td>
+                        <td>${gift.name}</td>
+                        <td>${gift.type || 'General'}</td>
+                        <td>
+                            <span class="badge ${gift.is_active ? 'badge-active' : 'badge-inactive'}">
+                                ${gift.is_active ? 'Active' : 'Inactive'}
+                            </span>
+                        </td>
                         <td>
                             <div class="actions">
                                 <a href="/admin/gifts/edit/${gift.id}" class="btn btn-small">Edit</a>
-                                <button onclick="deleteGift(${gift.id})" class="btn btn-small btn-danger">Delete</button>
+                                <button onclick="deleteGift(${gift.id})" class="btn btn-danger btn-small">Delete</button>
                             </div>
                         </td>
                     </tr>
                 `).join('');
             } catch (error) {
-                console.error('Error loading gifts:', error);
-                document.getElementById('loading').innerHTML = '<p style="color: red;">Error loading gifts</p>';
+                document.getElementById('loading').innerHTML = 'Error loading gifts';
             }
         }
 
         async function deleteGift(id) {
-            if (!confirm('Are you sure you want to delete this gift?')) return;
-
+            if (!confirm('Delete this gift?')) return;
             try {
-                const response = await fetch(`/api/admin/gifts/${id}`, {
-                    method: 'DELETE'
-                });
-
-                if (response.ok) {
-                    alert('Gift deleted successfully');
-                    loadGifts();
-                } else {
-                    alert('Failed to delete gift');
-                }
+                await fetch(`/api/admin/gifts/${id}`, { method: 'DELETE' });
+                loadGifts();
             } catch (error) {
-                console.error('Error deleting gift:', error);
                 alert('Error deleting gift');
             }
         }
