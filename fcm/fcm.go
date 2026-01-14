@@ -76,3 +76,41 @@ func SendGiftAvailableNotification(giftName string) error {
 	// Send to "gifts" topic - all users should subscribe to this topic
 	return SendNotificationToTopic("gifts", title, body)
 }
+
+// SendNotificationWithImage sends a notification with optional image to a topic
+func SendNotificationWithImage(topic, title, body, imageURL string) error {
+	if fcmClient == nil {
+		return fmt.Errorf("FCM client not initialized")
+	}
+
+	message := &messaging.Message{
+		Notification: &messaging.Notification{
+			Title:    title,
+			Body:     body,
+			ImageURL: imageURL,
+		},
+		Android: &messaging.AndroidConfig{
+			Priority: "high",
+			Notification: &messaging.AndroidNotification{
+				Title:        title,
+				Body:         body,
+				Sound:        "default",
+				Priority:     messaging.PriorityMax,
+				ChannelID:    "general_notifications",
+				Visibility:   messaging.VisibilityPublic,
+				DefaultSound: true,
+				ImageURL:     imageURL,
+			},
+		},
+		Topic: topic,
+	}
+
+	response, err := fcmClient.Send(context.Background(), message)
+	if err != nil {
+		log.Printf("❌ Error sending FCM notification: %v", err)
+		return err
+	}
+
+	log.Printf("✅ FCM notification sent successfully to topic '%s': %s", topic, response)
+	return nil
+}

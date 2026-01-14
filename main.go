@@ -266,6 +266,32 @@ func main() {
 		r.POST("/api/admin/paper/images/batch", paper.BatchCreateImages)
 		r.PUT("/api/admin/paper/images/:id", paper.UpdateImage)
 		r.DELETE("/api/admin/paper/images/:id", paper.DeleteImage)
+
+		// Admin API route for sending FCM notifications
+		r.POST("/api/admin/send-notification", func(c *gin.Context) {
+			var req struct {
+				Topic    string `json:"topic" binding:"required"`
+				Title    string `json:"title" binding:"required"`
+				Body     string `json:"body" binding:"required"`
+				ImageURL string `json:"image_url"`
+			}
+
+			if err := c.ShouldBindJSON(&req); err != nil {
+				c.JSON(400, gin.H{"error": "Invalid request: " + err.Error()})
+				return
+			}
+
+			// Send notification with image support
+			if err := fcm.SendNotificationWithImage(req.Topic, req.Title, req.Body, req.ImageURL); err != nil {
+				c.JSON(500, gin.H{"error": "Failed to send notification: " + err.Error()})
+				return
+			}
+
+			c.JSON(200, gin.H{
+				"success": true,
+				"message": "Notification sent successfully",
+			})
+		})
 	}
 
 	// Privacy Policy route (public)
