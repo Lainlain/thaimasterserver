@@ -158,7 +158,8 @@ func main() {
 		// Version/Health check endpoint
 		r.GET("/api/version", func(c *gin.Context) {
 			c.JSON(200, gin.H{
-				"version": "1.0.0",
+				"version": "1.1.0",
+				"build":   "2026.01.19",
 				"service": "2D Expect Lottery API",
 			})
 		})
