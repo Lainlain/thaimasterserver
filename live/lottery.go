@@ -234,6 +234,10 @@ func StreamLotteryData(c *gin.Context) {
 
 	// Listen for updates and client disconnect
 	notify := c.Request.Context().Done()
+	
+	// Keepalive ticker - send ping every 30 seconds to keep connection alive
+	pingTicker := time.NewTicker(30 * time.Second)
+	defer pingTicker.Stop()
 
 	for {
 		select {
@@ -245,6 +249,12 @@ func StreamLotteryData(c *gin.Context) {
 			close(clientChan)
 			log.Printf("📴 SSE client disconnected (Remaining clients: %d)", len(clients))
 			return
+		case <-pingTicker.C:
+			// Send keepalive ping (SSE comment, won't trigger data event)
+			c.Writer.Write([]byte(": keepalive\n\n"))
+			if flusher, ok := c.Writer.(interface{ Flush() }); ok {
+				flusher.Flush()
+			}
 		case message := <-clientChan:
 			// Send update to client
 			c.Writer.Write([]byte(fmt.Sprintf("data: %s\n\n", message)))

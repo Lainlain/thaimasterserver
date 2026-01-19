@@ -133,7 +133,7 @@ func UpdateGift(gift Gift) error {
 	query := `
 		UPDATE gifts
 		SET name = ?, image_link = ?, type = ?, description = ?,
-		    points = ?, stock = ?, is_active = ?
+		    points = ?, stock = ?, is_active = ?, created_at = CURRENT_TIMESTAMP
 		WHERE id = ?
 	`
 	_, err := db.Exec(query, gift.Name, gift.ImageLink, gift.Type,
