@@ -9,6 +9,7 @@ import (
 	"thaimaster2d/fcm"
 	"thaimaster2d/gift"
 	"thaimaster2d/live"
+	"thaimaster2d/numerology"
 	"thaimaster2d/paper"
 	"thaimaster2d/slider"
 	"thaimaster2d/threed"
@@ -64,6 +65,7 @@ func main() {
 		admin.InitDB(db)
 		threed.InitDB(db)
 		paper.InitDB(db)
+		numerology.InitDB(db)
 		log.Println("✅ All database modules initialized!")
 	}
 
@@ -127,6 +129,9 @@ func main() {
 	r.GET("/api/game/guides/types", paper.GetAllTypes)
 	r.GET("/api/game/guides/types/:type_id/images", paper.GetImagesByType)
 
+	// Numerology routes (Myanmar lucky number calculator)
+	r.POST("/api/game/numerology/calculate", numerology.CalculateNumerology)
+
 	// Image serving route - static files from uploads directory
 	r.Static("/uploads", "./uploads")
 
@@ -160,7 +165,7 @@ func main() {
 			c.JSON(200, gin.H{
 				"version": "1.1.0",
 				"build":   "2026.01.19",
-				"service": "2D Expect Lottery API",
+				"service": "twodexpect",
 			})
 		})
 

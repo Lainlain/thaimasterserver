@@ -13,14 +13,14 @@ if [ ! -f "main.go" ]; then
 fi
 
 # Build the server (only main.go, not the import scripts)
-go build -o thaimasterserver main.go
+go build -o masterserver main.go
 
 if [ $? -eq 0 ]; then
     echo "✅ Build successful!"
-    echo "📦 Binary created: ./thaimasterserver"
+    echo "📦 Binary created: ./masterserver"
     echo ""
     echo "To start the server:"
-    echo "  ./thaimasterserver"
+    echo "  ./masterserver"
     echo ""
     echo "Or with systemd:"
     echo "  sudo systemctl restart masterserver"
