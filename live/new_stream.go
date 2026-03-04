@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"net/http"
 	"sync"
 	"time"
 
@@ -88,6 +89,52 @@ var (
 	newClients      = make(map[chan string]bool)
 	newClientsMutex sync.RWMutex
 )
+
+// StartNewStreamPoller starts a background goroutine that polls sourceURL every 1s
+// and pipes the data directly into the new stream — no HTTP round-trip to self.
+func StartNewStreamPoller(sourceURL string) {
+	log.Printf("🔄 New stream poller starting → %s", sourceURL)
+	client := &http.Client{Timeout: 5 * time.Second}
+	go func() {
+		for {
+			if err := fetchAndUpdateNew(client, sourceURL); err != nil {
+				log.Printf("⚠️  New stream poll error: %v", err)
+			}
+			time.Sleep(1 * time.Second)
+		}
+	}()
+}
+
+// fetchAndUpdateNew fetches source JSON and updates the new stream state directly.
+func fetchAndUpdateNew(client *http.Client, sourceURL string) error {
+	resp, err := client.Get(sourceURL)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return err
+	}
+
+	var inputData NewLotteryDataInput
+	if err := json.Unmarshal(body, &inputData); err != nil {
+		return err
+	}
+
+	newData := inputData.ToNewLotteryData()
+
+	newDataMutex.Lock()
+	newCurrentData = newData
+	newDataMutex.Unlock()
+
+	broadcastNewUpdate()
+
+	log.Printf("✅ New stream polled - Live: %s | Status: %s | 11:00: %s | 3:00: %s",
+		newData.Live, newData.Status, newData.Result1100, newData.Result300)
+	return nil
+}
 
 // InitNew initializes the new stream with default data
 func InitNew() {
