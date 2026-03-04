@@ -1,8 +1,8 @@
 package numerology
-package numerology
 
 import (
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"time"
@@ -17,20 +17,54 @@ type CalculateRequest struct {
 
 // NumerologyResult represents the calculated lucky numbers
 type NumerologyResult struct {
-	LifePathNumber int      `json:"life_path_number"`
-	LuckyNumbers   []string `json:"lucky_numbers"`
-	ExplanationMM  string   `json:"explanation_mm"`
-	ExplanationEN  string   `json:"explanation_en"`
-	Birthdate      string   `json:"birthdate"`
-	CalculatedAt   string   `json:"calculated_at"`
+	LifePathNumber    int      `json:"life_path_number"`
+	LuckyNumbers      []string `json:"lucky_numbers"`       // Lifetime
+	WeeklyNumbers     []string `json:"weekly_lucky_numbers"` // This week
+	DailyNumbers      []string `json:"daily_lucky_numbers"`  // Today
+	PersonalWeek      int      `json:"personal_week"`
+	PersonalDay       int      `json:"personal_day"`
+	WeekLabel         string   `json:"week_label"`
+	DayLabel          string   `json:"day_label"`
+	ExplanationMM     string   `json:"explanation_mm"`
+	ExplanationEN     string   `json:"explanation_en"`
+	Birthdate         string   `json:"birthdate"`
+	CalculatedAt      string   `json:"calculated_at"`
 }
 
 var db *sql.DB
 
-// InitDB initializes the numerology module (no database needed - pure calculation)
+// yangonLoc is the Yangon/Myanmar timezone (GMT+6:30)
+var yangonLoc *time.Location
+
+func init() {
+	var err error
+	yangonLoc, err = time.LoadLocation("Asia/Yangon")
+	if err != nil {
+		// Fallback: manual offset GMT+6:30
+		yangonLoc = time.FixedZone("Asia/Yangon", 6*3600+30*60)
+	}
+}
+
+// InitDB initializes the numerology module and creates cache table
 func InitDB(database *sql.DB) error {
 	db = database
-	fmt.Println("✅ Numerology module initialized (calculation-based)")
+	if db != nil {
+		_, err := db.Exec(`
+			CREATE TABLE IF NOT EXISTS numerology_cache (
+				birthdate   TEXT NOT NULL,
+				result_json TEXT NOT NULL,
+				cached_date TEXT NOT NULL,
+				updated_at  TEXT NOT NULL,
+				PRIMARY KEY (birthdate, cached_date)
+			)
+		`)
+		if err != nil {
+			fmt.Println("⚠️  Numerology cache table error:", err)
+		} else {
+			fmt.Println("✅ Numerology cache table ready")
+		}
+	}
+	fmt.Println("✅ Numerology module initialized (Yangon timezone)")
 	return nil
 }
 
@@ -49,69 +83,140 @@ func CalculateNumerology(c *gin.Context) {
 		return
 	}
 
+	// Current time in Yangon timezone
+	nowYangon := time.Now().In(yangonLoc)
+
 	// Calculate numerology
-	result := calculateLuckyNumbers(birthdate)
-	
+	result := calculateLuckyNumbers(birthdate, nowYangon)
+
+	// Save to server cache (best-effort)
+	if db != nil {
+		if jsonBytes, err := json.Marshal(result); err == nil {
+			saveCacheServer(req.Birthdate, nowYangon.Format("2006-01-02"), string(jsonBytes))
+		}
+	}
+
 	c.JSON(http.StatusOK, result)
 }
 
 // calculateLuckyNumbers performs Myanmar numerology calculation
-func calculateLuckyNumbers(birthdate time.Time) NumerologyResult {
+// nowYangon = current time already in Yangon timezone
+func calculateLuckyNumbers(birthdate time.Time, nowYangon time.Time) NumerologyResult {
 	year := birthdate.Year()
 	month := int(birthdate.Month())
 	day := birthdate.Day()
 
-	// Method 1: Life Path Number (sum all digits)
+	// ── LIFETIME ──────────────────────────────────────────────────────
 	lifePathNumber := calculateLifePath(year, month, day)
-
-	// Method 2: Day + Month pattern
 	dayMonthNumber := (day + month) % 100
-
-	// Method 3: Year reduction
 	yearSum := sumDigits(year)
 	yearNumber := (yearSum + day) % 100
-
-	// Method 4: Full date sum
 	fullSum := sumDigits(year) + sumDigits(month) + sumDigits(day)
 	fullNumber := fullSum % 100
-
-	// Generate 4 unique lucky numbers
 	luckyNumbers := generateUniqueLuckyNumbers([]int{
-		lifePathNumber,
-		dayMonthNumber,
-		yearNumber,
-		fullNumber,
+		lifePathNumber, dayMonthNumber, yearNumber, fullNumber,
 	})
 
-	// Generate explanations
+	// ── WEEKLY (resets every Monday in Yangon time) ────────────────────
+	_, weekNum := nowYangon.ISOWeek()             // ISO week 1-53
+	weekdayNum := int(nowYangon.Weekday())         // 0=Sun
+	if weekdayNum == 0 { weekdayNum = 7 }          // Sun=7
+	personalWeek := reduceToSingle(lifePathNumber + weekNum)
+	weeklyBase := (personalWeek*7 + weekNum) % 100
+	weeklyNumbers := generateUniqueLuckyNumbers([]int{
+		weeklyBase,
+		(personalWeek + weekdayNum) % 100,
+		(lifePathNumber + weekNum + weekdayNum) % 100,
+		(weeklyBase + personalWeek) % 100,
+	})
+	// Week range: Monday → Friday only (lottery days Mon-Fri)
+	weekday := int(nowYangon.Weekday()) // 0=Sun
+	if weekday == 0 { weekday = 7 }
+	monday := nowYangon.AddDate(0, 0, -(weekday - 1))
+	friday := monday.AddDate(0, 0, 4)
+	var weekLabel string
+	if monday.Month() == friday.Month() {
+		weekLabel = fmt.Sprintf("%s %d-%d (Mon-Fri)",
+			monday.Format("Jan"), monday.Day(), friday.Day())
+	} else {
+		weekLabel = fmt.Sprintf("%d %s-%d %s (Mon-Fri)",
+			monday.Day(), monday.Format("Jan"),
+			friday.Day(), friday.Format("Jan"))
+	}
+
+	// ── DAILY (changes every day in Yangon time) ──────────────────────
+	todayDay := nowYangon.Day()
+	todayMonth := int(nowYangon.Month())
+	personalDay := reduceToSingle(lifePathNumber + todayDay + todayMonth)
+	dailyBase := (personalDay*3 + todayDay) % 100
+	dailyNumbers := generateUniqueLuckyNumbers([]int{
+		dailyBase,
+		(personalDay + todayDay) % 100,
+		(lifePathNumber + todayDay + todayMonth) % 100,
+		(dailyBase + personalDay + todayMonth) % 100,
+	})
+	dayLabel := nowYangon.Format("02 Jan (Monday)")
+
+	// ── EXPLANATIONS ──────────────────────────────────────────────────
 	explanationMM := generateExplanationMM(lifePathNumber, len(luckyNumbers))
 	explanationEN := generateExplanationEN(lifePathNumber, len(luckyNumbers))
 
 	return NumerologyResult{
 		LifePathNumber: lifePathNumber,
 		LuckyNumbers:   luckyNumbers,
+		WeeklyNumbers:  weeklyNumbers,
+		DailyNumbers:   dailyNumbers,
+		PersonalWeek:   personalWeek,
+		PersonalDay:    personalDay,
+		WeekLabel:      weekLabel,
+		DayLabel:       dayLabel,
 		ExplanationMM:  explanationMM,
 		ExplanationEN:  explanationEN,
 		Birthdate:      birthdate.Format("2006-01-02"),
-		CalculatedAt:   time.Now().Format(time.RFC3339),
+		CalculatedAt:   nowYangon.Format("2006-01-02 15:04:05 MST"),
 	}
 }
 
-// calculateLifePath calculates the life path number (1-9)
+// saveCacheServer saves result JSON to server SQLite cache (best-effort)
+func saveCacheServer(birthdate, cachedDate, resultJSON string) {
+	if db == nil { return }
+	_, _ = db.Exec(`
+		INSERT OR REPLACE INTO numerology_cache (birthdate, result_json, cached_date, updated_at)
+		VALUES (?, ?, ?, ?)
+	`, birthdate, resultJSON, cachedDate, time.Now().In(yangonLoc).Format(time.RFC3339))
+}
+
+// calculateLifePath calculates the life path number (1-9, or master numbers 11/22)
+// Traditional method: reduce each component separately, then sum.
+// If final sum (or intermediate) is 11 or 22, preserve as master number.
 func calculateLifePath(year, month, day int) int {
-	sum := sumDigits(year) + sumDigits(month) + sumDigits(day)
-	
-	// Reduce to single digit (1-9)
-	for sum > 9 && sum != 11 && sum != 22 && sum != 33 {
-		sum = sumDigits(sum)
+	d := reduceComponent(day)
+	m := reduceComponent(month)
+	y := reduceComponent(year)
+	sum := d + m + y
+	// Check master number before final reduction
+	if sum == 11 || sum == 22 {
+		return sum
 	}
-	
-	// Master numbers stay as is, others reduce
-	if sum == 11 || sum == 22 || sum == 33 {
-		return sum % 10 // Convert master numbers to single digit for Myanmar style
+	return reduceToSingle(sum)
+}
+
+// reduceComponent reduces a date component to single digit,
+// but preserves 11 and 22 as master numbers.
+func reduceComponent(num int) int {
+	if num == 11 || num == 22 {
+		return num
 	}
-	
-	return sum
+	return reduceToSingle(num)
+}
+
+// reduceToSingle reduces any number to 1-9
+func reduceToSingle(num int) int {
+	for num > 9 {
+		num = sumDigits(num)
+	}
+	if num == 0 { return 9 }
+	return num
 }
 
 // sumDigits sums all digits in a number
@@ -162,7 +267,8 @@ func generateUniqueLuckyNumbers(candidates []int) []string {
 // generateExplanationMM generates Myanmar explanation
 func generateExplanationMM(lifePathNumber, count int) string {
 	var personality string
-	
+	var isMaster bool
+
 	switch lifePathNumber {
 	case 1:
 		personality = "ခေါင်းဆောင်မှု၊ လွတ်လပ်မှု"
@@ -181,19 +287,30 @@ func generateExplanationMM(lifePathNumber, count int) string {
 	case 8:
 		personality = "အောင်မြင်မှု၊ ကံကောင်းမှု"
 	case 9:
-		personality = "လူသားချင်းစာနာမှု၊ အတ္တဖြစ်မှု"
+		personality = "လူသားချင်းစာနာမှု၊ ကြင်နာမှု"
+	case 11:
+		personality = "နိဒါန်းပညာ၊ ဝိညာဉ်ရေးရာ အလင်းပေးမှု"
+		isMaster = true
+	case 22:
+		personality = "ကြီးမြတ်သောတည်ဆောက်မှု၊ လောကတော်လှပ်ငြိမ်းမှု"
+		isMaster = true
 	default:
 		personality = "ထူးခြားမှု၊ ကံကြမ္မာ"
 	}
 
-	return fmt.Sprintf("သင့်ရဲ့ ဘဝကံကြမ္မာဂဏန်းက %d ဖြစ်ပြီး %s ရှိပါတယ်။ သင့်အတွက် ကံကောင်းတဲ့ နံပါတ် %d လုံးကို တွက်ချက်ပေးထားပါတယ်။", 
+	if isMaster {
+		return fmt.Sprintf("သင့်ရဲ့ ဘဝကံကြမ္မာဂဏန်းက မာစတာနံပါတ် %d ဖြစ်ပြီး %s ရှိပါတယ်။ ဒါဟာ အလွန်ထူးခြားတဲ့ ကံကြမ္မာပါ။ သင့်အတွက် ကံကောင်းတဲ့ နံပါတ် %d လုံးကို တွက်ချက်ပေးထားပါတယ်။",
+			lifePathNumber, personality, count)
+	}
+	return fmt.Sprintf("သင့်ရဲ့ ဘဝကံကြမ္မာဂဏန်းက %d ဖြစ်ပြီး %s ရှိပါတယ်။ သင့်အတွက် ကံကောင်းတဲ့ နံပါတ် %d လုံးကို တွက်ချက်ပေးထားပါတယ်။",
 		lifePathNumber, personality, count)
 }
 
 // generateExplanationEN generates English explanation
 func generateExplanationEN(lifePathNumber, count int) string {
 	var personality string
-	
+	var isMaster bool
+
 	switch lifePathNumber {
 	case 1:
 		personality = "leadership and independence"
@@ -213,11 +330,21 @@ func generateExplanationEN(lifePathNumber, count int) string {
 		personality = "success and prosperity"
 	case 9:
 		personality = "compassion and idealism"
+	case 11:
+		personality = "intuition, spiritual enlightenment and inspiration"
+		isMaster = true
+	case 22:
+		personality = "master builder, turning dreams into reality"
+		isMaster = true
 	default:
 		personality = "unique destiny"
 	}
 
-	return fmt.Sprintf("Your life path number is %d, representing %s. We've calculated %d lucky numbers for you.", 
+	if isMaster {
+		return fmt.Sprintf("Your life path number is Master Number %d, representing %s. This is a rare and powerful destiny. We've calculated %d lucky numbers for you.",
+			lifePathNumber, personality, count)
+	}
+	return fmt.Sprintf("Your life path number is %d, representing %s. We've calculated %d lucky numbers for you.",
 		lifePathNumber, personality, count)
 }
 

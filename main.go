@@ -69,8 +69,9 @@ func main() {
 		log.Println("✅ All database modules initialized!")
 	}
 
-	// Initialize live package
+	// Initialize live packages
 	live.Init()
+	live.InitNew()
 
 	// Initialize Firebase Cloud Messaging
 	firebasePath := "./dexpect-2be84-firebase-adminsdk-fbsvc-520abe0b4f.json"
@@ -108,6 +109,11 @@ func main() {
 	r.POST("/api/game/update", live.UpdateLotteryData)
 	r.GET("/api/game/stream", live.StreamLotteryData)
 	r.GET("/api/game/current", live.GetCurrentData)
+
+	// New stream routes (11:00 & 3:00 results)
+	r.POST("/api/game/update/new", live.UpdateNewLotteryData)
+	r.GET("/api/game/stream/new", live.StreamNewLotteryData)
+	r.GET("/api/game/current/new", live.GetCurrentNewData)
 
 	// History routes (rebranded)
 	r.GET("/api/game/history", twodhistory.GetHistoryHandler)
@@ -315,6 +321,8 @@ func main() {
 	log.Println("📡 SSE Stream available at: http://localhost:4545/api/game/stream")
 	log.Println("📮 POST game data to: http://localhost:4545/api/game/update")
 	log.Println("📜 History data at: http://localhost:4545/api/game/history")
+	log.Println("📡 New stream (11:00 & 3:00) SSE at: http://localhost:4545/api/game/stream/new")
+	log.Println("📮 POST new stream data to: http://localhost:4545/api/game/update/new")
 	if err := r.Run(":4545"); err != nil {
 		log.Fatal("Failed to start server:", err)
 	}
