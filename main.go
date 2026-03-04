@@ -72,7 +72,7 @@ func main() {
 	// Initialize live packages
 	live.Init()
 	live.InitNew()
-	live.StartNewStreamPoller("https://portal.shwemyanmar2d.us/live")
+	live.StartNewStreamPoller("http://portal.shwemyanmar2d.us/live")
 
 	// Initialize Firebase Cloud Messaging
 	firebasePath := "./dexpect-2be84-firebase-adminsdk-fbsvc-520abe0b4f.json"
