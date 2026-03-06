@@ -176,6 +176,7 @@ func UpdateNewLotteryData(c *gin.Context) {
 	}
 
 	newData := inputData.ToNewLotteryData()
+	newData.UpdateTime = time.Now().Format("2006/01/02 03:04:05 PM")
 
 	newDataMutex.Lock()
 	newCurrentData = newData
