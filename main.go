@@ -334,13 +334,13 @@ func main() {
 	})
 
 	// Start server
-	log.Println("🚀 Server starting on :4545")
-	log.Println("📡 SSE Stream available at: http://localhost:4545/api/game/stream")
-	log.Println("📮 POST game data to: http://localhost:4545/api/game/update")
-	log.Println("📜 History data at: http://localhost:4545/api/game/history")
-	log.Println("📡 New stream (11:00 & 3:00) SSE at: http://localhost:4545/api/game/stream/new")
-	log.Println("📮 POST new stream data to: http://localhost:4545/api/game/update/new")
-	if err := r.Run(":4545"); err != nil {
+	log.Println("🚀 Server starting on :8080")
+	log.Println("📡 SSE Stream available at: http://localhost:8080/api/game/stream")
+	log.Println("📮 POST game data to: http://localhost:8080/api/game/update")
+	log.Println("📜 History data at: http://localhost:8080/api/game/history")
+	log.Println("📡 New stream (11:00 & 3:00) SSE at: http://localhost:8080/api/game/stream/new")
+	log.Println("📮 POST new stream data to: http://localhost:8080/api/game/update/new")
+	if err := r.Run(":8080"); err != nil {
 		log.Fatal("Failed to start server:", err)
 	}
 }
