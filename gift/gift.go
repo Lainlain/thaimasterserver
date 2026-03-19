@@ -34,7 +34,7 @@ func InitDB(database *sql.DB) {
 func createTable() {
 	query := `
 	CREATE TABLE IF NOT EXISTS gifts (
-		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		id SERIAL PRIMARY KEY,
 		name TEXT NOT NULL,
 		image_link TEXT NOT NULL,
 		type TEXT NOT NULL CHECK (type IN ('Daily', 'Weekly')),
@@ -42,7 +42,7 @@ func createTable() {
 		points INTEGER DEFAULT 0,
 		stock INTEGER DEFAULT 0,
 		is_active INTEGER DEFAULT 1,
-		created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+		created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 	);
 	CREATE INDEX IF NOT EXISTS idx_gift_type ON gifts(type);
 	CREATE INDEX IF NOT EXISTS idx_gift_active ON gifts(is_active);
@@ -116,7 +116,7 @@ func GetAllGiftsForAdmin() ([]Gift, error) {
 func InsertGift(gift Gift) error {
 	query := `
 		INSERT INTO gifts (name, image_link, type, description, points, stock, is_active)
-		VALUES (?, ?, ?, ?, ?, ?, ?)
+		VALUES ($1, $2, $3, $4, $5, $6, $7)
 	`
 	_, err := db.Exec(query, gift.Name, gift.ImageLink, gift.Type,
 		gift.Description, gift.Points, gift.Stock, gift.IsActive)
@@ -132,9 +132,9 @@ func InsertGift(gift Gift) error {
 func UpdateGift(gift Gift) error {
 	query := `
 		UPDATE gifts
-		SET name = ?, image_link = ?, type = ?, description = ?,
-		    points = ?, stock = ?, is_active = ?, created_at = CURRENT_TIMESTAMP
-		WHERE id = ?
+		SET name = $1, image_link = $2, type = $3, description = $4,
+		    points = $5, stock = $6, is_active = $7, created_at = CURRENT_TIMESTAMP
+		WHERE id = $8
 	`
 	_, err := db.Exec(query, gift.Name, gift.ImageLink, gift.Type,
 		gift.Description, gift.Points, gift.Stock, gift.IsActive, gift.ID)
@@ -156,7 +156,7 @@ func UpdateGift(gift Gift) error {
 
 // DeleteGift deletes a gift
 func DeleteGift(id int) error {
-	query := `DELETE FROM gifts WHERE id = ?`
+	query := `DELETE FROM gifts WHERE id = $1`
 	_, err := db.Exec(query, id)
 	if err != nil {
 		log.Printf("❌ Error deleting gift: %v", err)

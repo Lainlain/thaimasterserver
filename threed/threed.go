@@ -29,11 +29,11 @@ func InitDB(database *sql.DB) {
 func createTable() {
 	query := `
 		CREATE TABLE IF NOT EXISTS threed (
-			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			id SERIAL PRIMARY KEY,
 			date DATE NOT NULL UNIQUE,
 			result TEXT NOT NULL,
-			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-			updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+			updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 		);
 		CREATE INDEX IF NOT EXISTS idx_threed_date ON threed(date DESC);
 	`

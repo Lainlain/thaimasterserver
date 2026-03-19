@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	_ "github.com/mattn/go-sqlite3"
 )
 
 // TwoDHistory represents a single lottery history record
@@ -47,55 +46,10 @@ type LotteryData struct {
 	UpdateTime  string `json:"updatetime"`
 }
 
-// InitDB initializes the database connection
-func InitDB(dbPath string) error {
-	var err error
-
-	log.Printf("📂 Opening database file: %s", dbPath)
-
-	// Open SQLite database (will create file if it doesn't exist)
-	db, err = sql.Open("sqlite3", dbPath)
-	if err != nil {
-		return fmt.Errorf("failed to open database: %w", err)
-	}
-
-	// Test connection
-	if err = db.Ping(); err != nil {
-		return fmt.Errorf("failed to ping database: %w", err)
-	}
-
-	// Create table if not exists
-	if err = createTable(); err != nil {
-		return fmt.Errorf("failed to create table: %w", err)
-	}
-
-	log.Println("✅ Database connected and table created successfully")
-	return nil
-}
-
-// createTable creates the twodhistory table if it doesn't exist
-func createTable() error {
-	query := `
-	CREATE TABLE IF NOT EXISTS twodhistory (
-		id INTEGER PRIMARY KEY AUTOINCREMENT,
-		date TEXT NOT NULL UNIQUE,
-		set1200 TEXT,
-		value1200 TEXT,
-		result1200 TEXT,
-		set430 TEXT,
-		value430 TEXT,
-		result430 TEXT,
-		modern930 TEXT,
-		internet930 TEXT,
-		modern200 TEXT,
-		internet200 TEXT,
-		created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-	);
-	CREATE INDEX IF NOT EXISTS idx_twodhistory_date ON twodhistory(date DESC);
-	`
-
-	_, err := db.Exec(query)
-	return err
+// InitDB receives the shared database connection (opened and migrated by db.Connect)
+func InitDB(database *sql.DB) {
+	db = database
+	log.Println("✅ twodhistory module initialized")
 }
 
 // InsertHistory inserts a new history record if the date doesn't exist

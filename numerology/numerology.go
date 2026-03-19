@@ -181,8 +181,10 @@ func calculateLuckyNumbers(birthdate time.Time, nowYangon time.Time) NumerologyR
 func saveCacheServer(birthdate, cachedDate, resultJSON string) {
 	if db == nil { return }
 	_, _ = db.Exec(`
-		INSERT OR REPLACE INTO numerology_cache (birthdate, result_json, cached_date, updated_at)
-		VALUES (?, ?, ?, ?)
+		INSERT INTO numerology_cache (birthdate, result_json, cached_date, updated_at)
+		VALUES ($1, $2, $3, $4)
+		ON CONFLICT (birthdate, cached_date) DO UPDATE
+		SET result_json = EXCLUDED.result_json, updated_at = EXCLUDED.updated_at
 	`, birthdate, resultJSON, cachedDate, time.Now().In(yangonLoc).Format(time.RFC3339))
 }
 

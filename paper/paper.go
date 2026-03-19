@@ -42,21 +42,17 @@ func InitDB(database *sql.DB) {
 }
 
 func createTables() {
-	// Enable foreign keys
-	_, err := db.Exec(`PRAGMA foreign_keys = ON`)
-	if err != nil {
-		panic("Failed to enable foreign keys: " + err.Error())
-	}
+	// PostgreSQL: foreign keys are enforced via REFERENCES constraints (no PRAGMA needed)
 
 	// Create paper_types table
-	_, err = db.Exec(`
+	_, err := db.Exec(`
 		CREATE TABLE IF NOT EXISTS paper_types (
-			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			id SERIAL PRIMARY KEY,
 			name TEXT NOT NULL UNIQUE,
 			display_order INTEGER NOT NULL DEFAULT 0,
 			is_active INTEGER NOT NULL DEFAULT 1,
-			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-			updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+			updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 		)
 	`)
 	if err != nil {
@@ -66,13 +62,13 @@ func createTables() {
 	// Create paper_images table
 	_, err = db.Exec(`
 		CREATE TABLE IF NOT EXISTS paper_images (
-			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			id SERIAL PRIMARY KEY,
 			type_id INTEGER NOT NULL REFERENCES paper_types(id) ON DELETE CASCADE,
 			image_url TEXT NOT NULL,
 			display_order INTEGER NOT NULL DEFAULT 0,
 			is_active INTEGER NOT NULL DEFAULT 1,
-			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-			updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+			updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 		)
 	`)
 	if err != nil {
@@ -153,7 +149,7 @@ func GetAllTypesWithImages(c *gin.Context) {
 		imageRows, err := db.Query(`
 			SELECT id, type_id, image_url, display_order, is_active, created_at, updated_at
 			FROM paper_images
-			WHERE type_id = ?
+				WHERE type_id = $1
 			ORDER BY display_order ASC, created_at DESC
 		`, t.ID)
 		if err != nil {
@@ -190,7 +186,7 @@ func GetImagesByType(c *gin.Context) {
 		SELECT pi.id, pi.type_id, pt.name, pi.image_url, pi.display_order, pi.is_active, pi.created_at, pi.updated_at
 		FROM paper_images pi
 		JOIN paper_types pt ON pi.type_id = pt.id
-		WHERE pi.type_id = ? AND pi.is_active = 1 AND pt.is_active = 1
+		WHERE pi.type_id = $1 AND pi.is_active = 1 AND pt.is_active = 1
 		ORDER BY pi.display_order ASC, pi.created_at DESC
 	`, typeID)
 	if err != nil {
@@ -224,17 +220,13 @@ func CreateType(c *gin.Context) {
 		return
 	}
 
-	result, err := db.Exec(`
+	var id int64
+	err := db.QueryRow(`
 		INSERT INTO paper_types (name, display_order, is_active, created_at, updated_at)
-		VALUES (?, ?, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
-	`, input.Name, input.DisplayOrder)
+		VALUES ($1, $2, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+		RETURNING id
+	`, input.Name, input.DisplayOrder).Scan(&id)
 
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-
-	id, err := result.LastInsertId()
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -259,8 +251,8 @@ func UpdateType(c *gin.Context) {
 
 	_, err := db.Exec(`
 		UPDATE paper_types
-		SET name = ?, display_order = ?, is_active = ?, updated_at = CURRENT_TIMESTAMP
-		WHERE id = ?
+		SET name = $1, display_order = $2, is_active = $3, updated_at = CURRENT_TIMESTAMP
+		WHERE id = $4
 	`, input.Name, input.DisplayOrder, input.IsActive, id)
 
 	if err != nil {
@@ -275,7 +267,7 @@ func UpdateType(c *gin.Context) {
 func DeleteType(c *gin.Context) {
 	id := c.Param("id")
 
-	_, err := db.Exec("DELETE FROM paper_types WHERE id = ?", id)
+	_, err := db.Exec("DELETE FROM paper_types WHERE id = $1", id)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -297,17 +289,13 @@ func CreateImage(c *gin.Context) {
 		return
 	}
 
-	result, err := db.Exec(`
+	var id int64
+	err := db.QueryRow(`
 		INSERT INTO paper_images (type_id, image_url, display_order, is_active, created_at, updated_at)
-		VALUES (?, ?, ?, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
-	`, input.TypeID, input.ImageURL, input.DisplayOrder)
+		VALUES ($1, $2, $3, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+		RETURNING id
+	`, input.TypeID, input.ImageURL, input.DisplayOrder).Scan(&id)
 
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-
-	id, err := result.LastInsertId()
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -333,8 +321,8 @@ func UpdateImage(c *gin.Context) {
 
 	_, err := db.Exec(`
 		UPDATE paper_images
-		SET type_id = ?, image_url = ?, display_order = ?, is_active = ?, updated_at = CURRENT_TIMESTAMP
-		WHERE id = ?
+		SET type_id = $1, image_url = $2, display_order = $3, is_active = $4, updated_at = CURRENT_TIMESTAMP
+		WHERE id = $5
 	`, input.TypeID, input.ImageURL, input.DisplayOrder, input.IsActive, id)
 
 	if err != nil {
@@ -349,7 +337,7 @@ func UpdateImage(c *gin.Context) {
 func DeleteImage(c *gin.Context) {
 	id := c.Param("id")
 
-	_, err := db.Exec("DELETE FROM paper_images WHERE id = ?", id)
+	_, err := db.Exec("DELETE FROM paper_images WHERE id = $1", id)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -378,18 +366,13 @@ func BatchCreateImages(c *gin.Context) {
 
 	var insertedIDs []int
 	for i, url := range input.ImageURLs {
-		result, err := tx.Exec(`
+		var id int64
+		err := tx.QueryRow(`
 			INSERT INTO paper_images (type_id, image_url, display_order, is_active, created_at, updated_at)
-			VALUES (?, ?, ?, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
-		`, input.TypeID, url, i)
+			VALUES ($1, $2, $3, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+			RETURNING id
+		`, input.TypeID, url, i).Scan(&id)
 
-		if err != nil {
-			tx.Rollback()
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-			return
-		}
-
-		id, err := result.LastInsertId()
 		if err != nil {
 			tx.Rollback()
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -416,7 +399,7 @@ func GetTypeByID(id string) (*PaperType, error) {
 	err := db.QueryRow(`
 		SELECT id, name, display_order, is_active, created_at, updated_at
 		FROM paper_types
-		WHERE id = ?
+		WHERE id = $1
 	`, id).Scan(&t.ID, &t.Name, &t.DisplayOrder, &t.IsActive, &t.CreatedAt, &t.UpdatedAt)
 
 	if err != nil {
@@ -425,7 +408,7 @@ func GetTypeByID(id string) (*PaperType, error) {
 
 	// Get image count
 	db.QueryRow(`
-		SELECT COUNT(*) FROM paper_images WHERE type_id = ? AND is_active = 1
+		SELECT COUNT(*) FROM paper_images WHERE type_id = $1 AND is_active = 1
 	`, id).Scan(&t.ImageCount)
 
 	return &t, nil
@@ -438,7 +421,7 @@ func GetImageByID(id string) (*PaperImage, error) {
 		SELECT pi.id, pi.type_id, pt.name, pi.image_url, pi.display_order, pi.is_active, pi.created_at, pi.updated_at
 		FROM paper_images pi
 		JOIN paper_types pt ON pi.type_id = pt.id
-		WHERE pi.id = ?
+		WHERE pi.id = $1
 	`, id).Scan(&img.ID, &img.TypeID, &img.TypeName, &img.ImageURL, &img.DisplayOrder, &img.IsActive, &img.CreatedAt, &img.UpdatedAt)
 
 	if err != nil {
@@ -454,7 +437,7 @@ func GetNextDisplayOrder(typeID int) int {
 	err := db.QueryRow(`
 		SELECT COALESCE(MAX(display_order), 0) + 1
 		FROM paper_images
-		WHERE type_id = ?
+		WHERE type_id = $1
 	`, typeID).Scan(&order)
 
 	if err != nil {

@@ -6,6 +6,8 @@ import (
 	"os"
 	"syscall"
 	"thaimaster2d/admin"
+	"thaimaster2d/chat"
+	dbpkg "thaimaster2d/db"
 	"thaimaster2d/fcm"
 	"thaimaster2d/gift"
 	"thaimaster2d/live"
@@ -38,34 +40,35 @@ func main() {
 		c.Next()
 	})
 
-	// Initialize database
-	dbPath := os.Getenv("DATABASE_PATH")
-	if dbPath == "" {
-		// Default SQLite database file
-		dbPath = "./thaimaster2d.db"
+	// Initialize database — auto-creates DB + runs all migrations on startup
+	dbURL := os.Getenv("DATABASE_URL")
+	if dbURL == "" {
+		// Default local PostgreSQL connection string
+		dbURL = "postgres://postgres:postgres@localhost/thaimaster2d?sslmode=disable"
 	}
 
-	log.Printf("🔌 Attempting database connection...")
-	log.Printf("� Database file: %s", dbPath)
+	log.Printf("🔌 Connecting to PostgreSQL...")
 
 	dbEnabled := false
-	if err := twodhistory.InitDB(dbPath); err != nil {
+	database, err := dbpkg.Connect(dbURL)
+	if err != nil {
 		log.Printf("❌ Database initialization failed: %v", err)
 		log.Println("⚠️  Continuing without database features...")
 		log.Println("⚠️  Admin routes and data APIs will not be available!")
 	} else {
-		defer twodhistory.CloseDB()
+		defer database.Close()
 		dbEnabled = true
-		log.Println("✅ Database connected successfully!")
+		log.Println("✅ Database connected and all migrations applied!")
 
-		// Initialize gift and slider packages
-		db := twodhistory.GetDB()
-		gift.InitDB(db)
-		slider.InitDB(db)
-		admin.InitDB(db)
-		threed.InitDB(db)
-		paper.InitDB(db)
-		numerology.InitDB(db)
+		// Initialize all modules with the shared DB connection
+		twodhistory.InitDB(database)
+		gift.InitDB(database)
+		slider.InitDB(database)
+		admin.InitDB(database)
+		threed.InitDB(database)
+		paper.InitDB(database)
+		numerology.InitDB(database)
+		chat.InitDB(database)
 		log.Println("✅ All database modules initialized!")
 	}
 
@@ -137,6 +140,13 @@ func main() {
 
 	// Numerology routes (Myanmar lucky number calculator)
 	r.POST("/api/game/numerology/calculate", numerology.CalculateNumerology)
+
+	// ── Chat routes (public) ─────────────────────────────────────────────────
+	r.POST("/api/chat/auth/google", chat.GoogleLoginHandler)
+	r.GET("/api/chat/messages", chat.GetMessagesHandler)
+	r.GET("/api/chat/avatars", chat.GetAvatarGalleryHandler)
+	r.PUT("/api/chat/profile", chat.UpdateProfileHandler)
+	r.GET("/api/chat/ws", chat.WSHandler)
 
 	// Image serving route - static files from uploads directory
 	r.Static("/uploads", "./uploads")
@@ -278,6 +288,13 @@ func main() {
 		r.POST("/api/admin/paper/images/batch", paper.BatchCreateImages)
 		r.PUT("/api/admin/paper/images/:id", paper.UpdateImage)
 		r.DELETE("/api/admin/paper/images/:id", paper.DeleteImage)
+
+		// Admin API routes for chat moderation
+		r.POST("/api/admin/chat/ban", chat.BanUserHandler)
+		r.POST("/api/admin/chat/unban", chat.UnbanUserHandler)
+		r.POST("/api/admin/chat/device-ban", chat.BanDeviceHandler)
+		r.POST("/api/admin/chat/device-unban", chat.UnbanDeviceHandler)
+		r.GET("/api/admin/chat/users", chat.GetChatUsersHandler)
 
 		// Admin API route for sending FCM notifications
 		r.POST("/api/admin/send-notification", func(c *gin.Context) {
