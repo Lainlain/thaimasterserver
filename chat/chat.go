@@ -474,6 +474,89 @@ func UnbanDeviceHandler(c *gin.Context) {
 	c.JSON(200, gin.H{"message": "Device unbanned"})
 }
 
+// POST /api/chat/report
+// Body: { "reported_user_id": 1, "message_id": 42, "reason": "Spam", "reporter_device_id": "..." }
+func ReportUserHandler(c *gin.Context) {
+	var req struct {
+		ReportedUserID   int    `json:"reported_user_id" binding:"required"`
+		MessageID        *int   `json:"message_id"`
+		Reason           string `json:"reason"`
+		ReporterDeviceID string `json:"reporter_device_id"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(400, gin.H{"error": "reported_user_id is required"})
+		return
+	}
+
+	// Prevent duplicate reports from same device within 1 hour
+	var existingCount int
+	db.QueryRow(`
+		SELECT COUNT(*) FROM chat_reports
+		WHERE reported_user_id = $1
+		  AND reporter_device_id = $2
+		  AND created_at > NOW() - INTERVAL '1 hour'
+	`, req.ReportedUserID, req.ReporterDeviceID).Scan(&existingCount)
+	if existingCount > 0 {
+		c.JSON(200, gin.H{"message": "Already reported"})
+		return
+	}
+
+	_, err := db.Exec(`
+		INSERT INTO chat_reports (reported_user_id, message_id, reporter_device_id, reason)
+		VALUES ($1, $2, $3, $4)
+	`, req.ReportedUserID, req.MessageID, req.ReporterDeviceID, req.Reason)
+	if err != nil {
+		c.JSON(500, gin.H{"error": "Failed to submit report"})
+		return
+	}
+
+	log.Printf("🚩 User %d reported | reason: %s | device: %s", req.ReportedUserID, req.Reason, req.ReporterDeviceID)
+	c.JSON(200, gin.H{"message": "Report submitted"})
+}
+
+// GET /api/admin/chat/reports
+func GetReportsHandler(c *gin.Context) {
+	rows, err := db.Query(`
+		SELECT
+			r.id, r.reported_user_id, u.display_name,
+			r.message_id, r.reporter_device_id, r.reason,
+			r.is_reviewed, r.created_at
+		FROM chat_reports r
+		JOIN chat_users u ON u.id = r.reported_user_id
+		ORDER BY r.created_at DESC
+		LIMIT 200
+	`)
+	if err != nil {
+		c.JSON(500, gin.H{"error": err.Error()})
+		return
+	}
+	defer rows.Close()
+
+	type ReportRow struct {
+		ID               int        `json:"id"`
+		ReportedUserID   int        `json:"reported_user_id"`
+		ReportedName     string     `json:"reported_name"`
+		MessageID        *int       `json:"message_id"`
+		ReporterDeviceID string     `json:"reporter_device_id"`
+		Reason           string     `json:"reason"`
+		IsReviewed       bool       `json:"is_reviewed"`
+		CreatedAt        time.Time  `json:"created_at"`
+	}
+
+	var reports []ReportRow
+	for rows.Next() {
+		var rr ReportRow
+		rows.Scan(&rr.ID, &rr.ReportedUserID, &rr.ReportedName,
+			&rr.MessageID, &rr.ReporterDeviceID, &rr.Reason,
+			&rr.IsReviewed, &rr.CreatedAt)
+		reports = append(reports, rr)
+	}
+	if reports == nil {
+		reports = []ReportRow{}
+	}
+	c.JSON(200, gin.H{"reports": reports, "total": len(reports)})
+}
+
 // GET /api/admin/chat/users
 func GetChatUsersHandler(c *gin.Context) {
 	rows, err := db.Query(`

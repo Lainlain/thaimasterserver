@@ -233,6 +233,22 @@ PRIMARY KEY (birthdate, cached_date)
 				CREATE INDEX IF NOT EXISTS idx_chat_messages_user_id    ON chat_messages(user_id);
 			`,
 		},
+		{
+			name: "chat_reports",
+			sql: `
+				CREATE TABLE IF NOT EXISTS chat_reports (
+					id                 SERIAL PRIMARY KEY,
+					reported_user_id   INTEGER NOT NULL REFERENCES chat_users(id) ON DELETE CASCADE,
+					message_id         INTEGER REFERENCES chat_messages(id) ON DELETE SET NULL,
+					reporter_device_id TEXT NOT NULL DEFAULT '',
+					reason             TEXT NOT NULL DEFAULT '',
+					is_reviewed        BOOLEAN NOT NULL DEFAULT FALSE,
+					created_at         TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+				);
+				CREATE INDEX IF NOT EXISTS idx_chat_reports_reported_user_id ON chat_reports(reported_user_id);
+				CREATE INDEX IF NOT EXISTS idx_chat_reports_created_at       ON chat_reports(created_at DESC);
+			`,
+		},
 	}
 
 	for _, m := range migrations {

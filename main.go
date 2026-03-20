@@ -146,6 +146,7 @@ func main() {
 	r.GET("/api/chat/messages", chat.GetMessagesHandler)
 	r.GET("/api/chat/avatars", chat.GetAvatarGalleryHandler)
 	r.PUT("/api/chat/profile", chat.UpdateProfileHandler)
+	r.POST("/api/chat/report", chat.ReportUserHandler)
 	r.GET("/api/chat/ws", chat.WSHandler)
 
 	// Image serving route - static files from uploads directory
@@ -295,6 +296,7 @@ func main() {
 		r.POST("/api/admin/chat/device-ban", chat.BanDeviceHandler)
 		r.POST("/api/admin/chat/device-unban", chat.UnbanDeviceHandler)
 		r.GET("/api/admin/chat/users", chat.GetChatUsersHandler)
+		r.GET("/api/admin/chat/reports", chat.GetReportsHandler)
 
 		// Admin API route for sending FCM notifications
 		r.POST("/api/admin/send-notification", func(c *gin.Context) {
