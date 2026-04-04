@@ -17,18 +17,18 @@ type CalculateRequest struct {
 
 // NumerologyResult represents the calculated lucky numbers
 type NumerologyResult struct {
-	LifePathNumber    int      `json:"life_path_number"`
-	LuckyNumbers      []string `json:"lucky_numbers"`       // Lifetime
-	WeeklyNumbers     []string `json:"weekly_lucky_numbers"` // This week
-	DailyNumbers      []string `json:"daily_lucky_numbers"`  // Today
-	PersonalWeek      int      `json:"personal_week"`
-	PersonalDay       int      `json:"personal_day"`
-	WeekLabel         string   `json:"week_label"`
-	DayLabel          string   `json:"day_label"`
-	ExplanationMM     string   `json:"explanation_mm"`
-	ExplanationEN     string   `json:"explanation_en"`
-	Birthdate         string   `json:"birthdate"`
-	CalculatedAt      string   `json:"calculated_at"`
+	LifePathNumber int      `json:"life_path_number"`
+	LuckyNumbers   []string `json:"lucky_numbers"`        // Lifetime
+	WeeklyNumbers  []string `json:"weekly_lucky_numbers"` // This week
+	DailyNumbers   []string `json:"daily_lucky_numbers"`  // Today
+	PersonalWeek   int      `json:"personal_week"`
+	PersonalDay    int      `json:"personal_day"`
+	WeekLabel      string   `json:"week_label"`
+	DayLabel       string   `json:"day_label"`
+	ExplanationMM  string   `json:"explanation_mm"`
+	ExplanationEN  string   `json:"explanation_en"`
+	Birthdate      string   `json:"birthdate"`
+	CalculatedAt   string   `json:"calculated_at"`
 }
 
 var db *sql.DB
@@ -118,9 +118,11 @@ func calculateLuckyNumbers(birthdate time.Time, nowYangon time.Time) NumerologyR
 	})
 
 	// ── WEEKLY (resets every Monday in Yangon time) ────────────────────
-	_, weekNum := nowYangon.ISOWeek()             // ISO week 1-53
-	weekdayNum := int(nowYangon.Weekday())         // 0=Sun
-	if weekdayNum == 0 { weekdayNum = 7 }          // Sun=7
+	_, weekNum := nowYangon.ISOWeek()      // ISO week 1-53
+	weekdayNum := int(nowYangon.Weekday()) // 0=Sun
+	if weekdayNum == 0 {
+		weekdayNum = 7
+	} // Sun=7
 	personalWeek := reduceToSingle(lifePathNumber + weekNum)
 	weeklyBase := (personalWeek*7 + weekNum) % 100
 	weeklyNumbers := generateUniqueLuckyNumbers([]int{
@@ -131,7 +133,9 @@ func calculateLuckyNumbers(birthdate time.Time, nowYangon time.Time) NumerologyR
 	})
 	// Week range: Monday → Friday only (lottery days Mon-Fri)
 	weekday := int(nowYangon.Weekday()) // 0=Sun
-	if weekday == 0 { weekday = 7 }
+	if weekday == 0 {
+		weekday = 7
+	}
 	monday := nowYangon.AddDate(0, 0, -(weekday - 1))
 	friday := monday.AddDate(0, 0, 4)
 	var weekLabel string
@@ -179,7 +183,9 @@ func calculateLuckyNumbers(birthdate time.Time, nowYangon time.Time) NumerologyR
 
 // saveCacheServer saves result JSON to server SQLite cache (best-effort)
 func saveCacheServer(birthdate, cachedDate, resultJSON string) {
-	if db == nil { return }
+	if db == nil {
+		return
+	}
 	_, _ = db.Exec(`
 		INSERT INTO numerology_cache (birthdate, result_json, cached_date, updated_at)
 		VALUES ($1, $2, $3, $4)
@@ -217,7 +223,9 @@ func reduceToSingle(num int) int {
 	for num > 9 {
 		num = sumDigits(num)
 	}
-	if num == 0 { return 9 }
+	if num == 0 {
+		return 9
+	}
 	return num
 }
 
@@ -239,7 +247,7 @@ func generateUniqueLuckyNumbers(candidates []int) []string {
 	for _, num := range candidates {
 		// Ensure 2-digit number (0-99)
 		num = num % 100
-		
+
 		if !seen[num] {
 			seen[num] = true
 			numbers = append(numbers, fmt.Sprintf("%02d", num))

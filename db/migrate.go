@@ -1,85 +1,85 @@
 package db
 
 import (
-"database/sql"
-"fmt"
-"log"
-"net/url"
-"strings"
+	"database/sql"
+	"fmt"
+	"log"
+	"net/url"
+	"strings"
 
-_ "github.com/lib/pq"
+	_ "github.com/lib/pq"
 )
 
 // Connect connects to PostgreSQL, auto-creates the database if it doesn't exist,
 // runs all table migrations, and returns the ready *sql.DB connection.
 func Connect(dsn string) (*sql.DB, error) {
-dbName, err := extractDBName(dsn)
-if err != nil {
-return nil, fmt.Errorf("invalid DSN: %w", err)
-}
+	dbName, err := extractDBName(dsn)
+	if err != nil {
+		return nil, fmt.Errorf("invalid DSN: %w", err)
+	}
 
-// Step 1: Connect to default 'postgres' DB to create our DB if needed
-adminDSN := replaceDBName(dsn, "postgres")
-adminDB, err := sql.Open("postgres", adminDSN)
-if err != nil {
-return nil, fmt.Errorf("failed to open admin connection: %w", err)
-}
-if err := adminDB.Ping(); err != nil {
-adminDB.Close()
-return nil, fmt.Errorf("failed to ping postgres: %w", err)
-}
+	// Step 1: Connect to default 'postgres' DB to create our DB if needed
+	adminDSN := replaceDBName(dsn, "postgres")
+	adminDB, err := sql.Open("postgres", adminDSN)
+	if err != nil {
+		return nil, fmt.Errorf("failed to open admin connection: %w", err)
+	}
+	if err := adminDB.Ping(); err != nil {
+		adminDB.Close()
+		return nil, fmt.Errorf("failed to ping postgres: %w", err)
+	}
 
-var exists bool
-row := adminDB.QueryRow("SELECT EXISTS(SELECT 1 FROM pg_database WHERE datname = $1)", dbName)
-if err := row.Scan(&exists); err != nil {
-adminDB.Close()
-return nil, fmt.Errorf("failed to check database existence: %w", err)
-}
-if !exists {
-log.Printf("📦 Database '%s' not found — creating...", dbName)
-_, err = adminDB.Exec(fmt.Sprintf(`CREATE DATABASE "%s"`, dbName))
-if err != nil {
-adminDB.Close()
-return nil, fmt.Errorf("failed to create database: %w", err)
-}
-log.Printf("✅ Database '%s' created", dbName)
-} else {
-log.Printf("✅ Database '%s' already exists", dbName)
-}
-adminDB.Close()
+	var exists bool
+	row := adminDB.QueryRow("SELECT EXISTS(SELECT 1 FROM pg_database WHERE datname = $1)", dbName)
+	if err := row.Scan(&exists); err != nil {
+		adminDB.Close()
+		return nil, fmt.Errorf("failed to check database existence: %w", err)
+	}
+	if !exists {
+		log.Printf("📦 Database '%s' not found — creating...", dbName)
+		_, err = adminDB.Exec(fmt.Sprintf(`CREATE DATABASE "%s"`, dbName))
+		if err != nil {
+			adminDB.Close()
+			return nil, fmt.Errorf("failed to create database: %w", err)
+		}
+		log.Printf("✅ Database '%s' created", dbName)
+	} else {
+		log.Printf("✅ Database '%s' already exists", dbName)
+	}
+	adminDB.Close()
 
-// Step 2: Connect to our actual database
-database, err := sql.Open("postgres", dsn)
-if err != nil {
-return nil, fmt.Errorf("failed to open database: %w", err)
-}
-if err := database.Ping(); err != nil {
-database.Close()
-return nil, fmt.Errorf("failed to ping database: %w", err)
-}
+	// Step 2: Connect to our actual database
+	database, err := sql.Open("postgres", dsn)
+	if err != nil {
+		return nil, fmt.Errorf("failed to open database: %w", err)
+	}
+	if err := database.Ping(); err != nil {
+		database.Close()
+		return nil, fmt.Errorf("failed to ping database: %w", err)
+	}
 
-// Step 3: Run all table migrations
-if err := runMigrations(database); err != nil {
-database.Close()
-return nil, fmt.Errorf("migration failed: %w", err)
-}
+	// Step 3: Run all table migrations
+	if err := runMigrations(database); err != nil {
+		database.Close()
+		return nil, fmt.Errorf("migration failed: %w", err)
+	}
 
-log.Println("✅ All migrations applied successfully")
-return database, nil
+	log.Println("✅ All migrations applied successfully")
+	return database, nil
 }
 
 // runMigrations creates all tables if they don't exist.
 // Safe to run on every startup — uses CREATE TABLE IF NOT EXISTS everywhere.
 func runMigrations(db *sql.DB) error {
-type migration struct {
-name string
-sql  string
-}
+	type migration struct {
+		name string
+		sql  string
+	}
 
-migrations := []migration{
-{
-name: "twodhistory",
-sql: `
+	migrations := []migration{
+		{
+			name: "twodhistory",
+			sql: `
 CREATE TABLE IF NOT EXISTS twodhistory (
 id          SERIAL PRIMARY KEY,
 date        TEXT NOT NULL UNIQUE,
@@ -97,10 +97,10 @@ created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 CREATE INDEX IF NOT EXISTS idx_twodhistory_date ON twodhistory(date DESC);
 `,
-},
-{
-name: "gifts",
-sql: `
+		},
+		{
+			name: "gifts",
+			sql: `
 CREATE TABLE IF NOT EXISTS gifts (
 id          SERIAL PRIMARY KEY,
 name        TEXT NOT NULL,
@@ -115,10 +115,10 @@ created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 CREATE INDEX IF NOT EXISTS idx_gift_type   ON gifts(type);
 CREATE INDEX IF NOT EXISTS idx_gift_active ON gifts(is_active);
 `,
-},
-{
-name: "sliders",
-sql: `
+		},
+		{
+			name: "sliders",
+			sql: `
 CREATE TABLE IF NOT EXISTS sliders (
 id           SERIAL PRIMARY KEY,
 image_link   TEXT NOT NULL,
@@ -131,10 +131,10 @@ created_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 CREATE INDEX IF NOT EXISTS idx_slider_active ON sliders(is_active);
 CREATE INDEX IF NOT EXISTS idx_slider_order  ON sliders(order_num);
 `,
-},
-{
-name: "threed",
-sql: `
+		},
+		{
+			name: "threed",
+			sql: `
 CREATE TABLE IF NOT EXISTS threed (
 id         SERIAL PRIMARY KEY,
 date       DATE NOT NULL UNIQUE,
@@ -144,10 +144,10 @@ updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 CREATE INDEX IF NOT EXISTS idx_threed_date ON threed(date DESC);
 `,
-},
-{
-name: "paper_types",
-sql: `
+		},
+		{
+			name: "paper_types",
+			sql: `
 CREATE TABLE IF NOT EXISTS paper_types (
 id            SERIAL PRIMARY KEY,
 name          TEXT NOT NULL UNIQUE,
@@ -158,10 +158,10 @@ updated_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 CREATE INDEX IF NOT EXISTS idx_paper_types_display_order ON paper_types(display_order);
 `,
-},
-{
-name: "paper_images",
-sql: `
+		},
+		{
+			name: "paper_images",
+			sql: `
 CREATE TABLE IF NOT EXISTS paper_images (
 id            SERIAL PRIMARY KEY,
 type_id       INTEGER NOT NULL REFERENCES paper_types(id) ON DELETE CASCADE,
@@ -174,10 +174,10 @@ updated_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 CREATE INDEX IF NOT EXISTS idx_paper_images_type_id      ON paper_images(type_id);
 CREATE INDEX IF NOT EXISTS idx_paper_images_display_order ON paper_images(display_order);
 `,
-},
-{
-name: "numerology_cache",
-sql: `
+		},
+		{
+			name: "numerology_cache",
+			sql: `
 CREATE TABLE IF NOT EXISTS numerology_cache (
 birthdate   TEXT NOT NULL,
 result_json TEXT NOT NULL,
@@ -186,7 +186,7 @@ updated_at  TEXT NOT NULL,
 PRIMARY KEY (birthdate, cached_date)
 );
 `,
-},
+		},
 		// ── Chat tables ──────────────────────────────────────────────────
 		{
 			name: "chat_users",
@@ -264,38 +264,38 @@ PRIMARY KEY (birthdate, cached_date)
 
 // seedPaperTypes inserts default paper categories if the table is empty.
 func seedPaperTypes(db *sql.DB) {
-var count int
-db.QueryRow("SELECT COUNT(*) FROM paper_types").Scan(&count)
-if count == 0 {
-log.Println("🌱 Seeding default paper types...")
-db.Exec(`
+	var count int
+	db.QueryRow("SELECT COUNT(*) FROM paper_types").Scan(&count)
+	if count == 0 {
+		log.Println("🌱 Seeding default paper types...")
+		db.Exec(`
 INSERT INTO paper_types (name, display_order) VALUES
 ('Myanmar News', 1),
 ('Thailand News', 2),
 ('International', 3)
 `)
-}
+	}
 }
 
 // extractDBName parses the database name from a postgres DSN URL.
 func extractDBName(dsn string) (string, error) {
-u, err := url.Parse(dsn)
-if err != nil {
-return "", err
-}
-name := strings.TrimPrefix(u.Path, "/")
-if name == "" {
-return "", fmt.Errorf("no database name in DSN")
-}
-return name, nil
+	u, err := url.Parse(dsn)
+	if err != nil {
+		return "", err
+	}
+	name := strings.TrimPrefix(u.Path, "/")
+	if name == "" {
+		return "", fmt.Errorf("no database name in DSN")
+	}
+	return name, nil
 }
 
 // replaceDBName returns the DSN with the target database name replaced.
 func replaceDBName(dsn, newDB string) string {
-u, err := url.Parse(dsn)
-if err != nil {
-return dsn
-}
-u.Path = "/" + newDB
-return u.String()
+	u, err := url.Parse(dsn)
+	if err != nil {
+		return dsn
+	}
+	u.Path = "/" + newDB
+	return u.String()
 }

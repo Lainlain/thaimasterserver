@@ -280,6 +280,12 @@ func main() {
 			c.JSON(200, gin.H{"message": "Slider deleted"})
 		})
 
+		// Admin API routes for 2D history
+		r.GET("/api/admin/twodhistory", twodhistory.AdminGetAllHistoryHandler)
+		r.POST("/api/admin/twodhistory", twodhistory.AdminCreateHistoryHandler)
+		r.PUT("/api/admin/twodhistory/:id", twodhistory.AdminUpdateHistoryHandler)
+		r.DELETE("/api/admin/twodhistory/:id", twodhistory.AdminDeleteHistoryHandler)
+
 		// Admin API routes for paper
 		r.GET("/api/admin/paper/types", paper.GetAllTypesWithImages)
 		r.POST("/api/admin/paper/types", paper.CreateType)

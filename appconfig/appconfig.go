@@ -80,7 +80,7 @@ if count == 0 {
 uery := `INSERT INTO app_config (latest_version, minimum_version, update_url, update_message, maintenance_message) VALUES (?, ?, ?, ?, ?)`
 err = db.Exec(query, "1.0.0", "1.0.0", "https://play.google.com/store/apps/details?id=com.twod.expect", "New version available", "App is under maintenance")
 err != nil {
-tf("❌ Failed to insert default config: %v\n", err)
+tf("❌ Failed to insert default config: %v\n", err) 
 else {
 tln("✅ Default app config inserted successfully")
 else {

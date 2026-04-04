@@ -533,14 +533,14 @@ func GetReportsHandler(c *gin.Context) {
 	defer rows.Close()
 
 	type ReportRow struct {
-		ID               int        `json:"id"`
-		ReportedUserID   int        `json:"reported_user_id"`
-		ReportedName     string     `json:"reported_name"`
-		MessageID        *int       `json:"message_id"`
-		ReporterDeviceID string     `json:"reporter_device_id"`
-		Reason           string     `json:"reason"`
-		IsReviewed       bool       `json:"is_reviewed"`
-		CreatedAt        time.Time  `json:"created_at"`
+		ID               int       `json:"id"`
+		ReportedUserID   int       `json:"reported_user_id"`
+		ReportedName     string    `json:"reported_name"`
+		MessageID        *int      `json:"message_id"`
+		ReporterDeviceID string    `json:"reporter_device_id"`
+		Reason           string    `json:"reason"`
+		IsReviewed       bool      `json:"is_reviewed"`
+		CreatedAt        time.Time `json:"created_at"`
 	}
 
 	var reports []ReportRow

@@ -201,6 +201,125 @@ func CheckAndInsertHandler(c *gin.Context) {
 	})
 }
 
+// AdminGetAllHistoryHandler handles GET /api/admin/twodhistory
+func AdminGetAllHistoryHandler(c *gin.Context) {
+	histories, err := GetAllHistory()
+	if err != nil {
+		log.Printf("❌ Error fetching history: %v", err)
+		c.JSON(500, gin.H{"error": "Failed to fetch history"})
+		return
+	}
+	c.JSON(200, histories)
+}
+
+// AdminCreateHistoryHandler handles POST /api/admin/twodhistory
+func AdminCreateHistoryHandler(c *gin.Context) {
+	var history TwoDHistory
+	if err := c.ShouldBindJSON(&history); err != nil {
+		c.JSON(400, gin.H{"error": "Invalid request body: " + err.Error()})
+		return
+	}
+
+	if history.Date == "" {
+		c.JSON(400, gin.H{"error": "date is required"})
+		return
+	}
+
+	exists, err := DateExists(history.Date)
+	if err != nil {
+		c.JSON(500, gin.H{"error": "Database error"})
+		return
+	}
+	if exists {
+		c.JSON(409, gin.H{"error": "History for date " + history.Date + " already exists"})
+		return
+	}
+
+	var id int
+	err = db.QueryRow(`
+		INSERT INTO twodhistory (
+			date, set1200, value1200, result1200,
+			set430, value430, result430,
+			modern930, internet930, modern200, internet200
+		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+		RETURNING id
+	`,
+		history.Date,
+		history.Set1200, history.Value1200, history.Result1200,
+		history.Set430, history.Value430, history.Result430,
+		history.Modern930, history.Internet930,
+		history.Modern200, history.Internet200,
+	).Scan(&id)
+
+	if err != nil {
+		log.Printf("❌ Error inserting history: %v", err)
+		c.JSON(500, gin.H{"error": "Failed to insert history"})
+		return
+	}
+
+	c.JSON(201, gin.H{"id": id, "message": "History record created successfully"})
+}
+
+// AdminUpdateHistoryHandler handles PUT /api/admin/twodhistory/:id
+func AdminUpdateHistoryHandler(c *gin.Context) {
+	id := c.Param("id")
+	var history TwoDHistory
+	if err := c.ShouldBindJSON(&history); err != nil {
+		c.JSON(400, gin.H{"error": "Invalid request body: " + err.Error()})
+		return
+	}
+
+	result, err := db.Exec(`
+		UPDATE twodhistory SET
+			date = $1,
+			set1200 = $2, value1200 = $3, result1200 = $4,
+			set430 = $5, value430 = $6, result430 = $7,
+			modern930 = $8, internet930 = $9,
+			modern200 = $10, internet200 = $11
+		WHERE id = $12
+	`,
+		history.Date,
+		history.Set1200, history.Value1200, history.Result1200,
+		history.Set430, history.Value430, history.Result430,
+		history.Modern930, history.Internet930,
+		history.Modern200, history.Internet200,
+		id,
+	)
+	if err != nil {
+		log.Printf("❌ Error updating history: %v", err)
+		c.JSON(500, gin.H{"error": "Failed to update history"})
+		return
+	}
+
+	rows, _ := result.RowsAffected()
+	if rows == 0 {
+		c.JSON(404, gin.H{"error": "Record not found"})
+		return
+	}
+
+	c.JSON(200, gin.H{"message": "History record updated successfully"})
+}
+
+// AdminDeleteHistoryHandler handles DELETE /api/admin/twodhistory/:id
+func AdminDeleteHistoryHandler(c *gin.Context) {
+	id := c.Param("id")
+
+	result, err := db.Exec("DELETE FROM twodhistory WHERE id = $1", id)
+	if err != nil {
+		log.Printf("❌ Error deleting history: %v", err)
+		c.JSON(500, gin.H{"error": "Failed to delete history"})
+		return
+	}
+
+	rows, _ := result.RowsAffected()
+	if rows == 0 {
+		c.JSON(404, gin.H{"error": "Record not found"})
+		return
+	}
+
+	c.JSON(200, gin.H{"message": "History record deleted successfully"})
+}
+
 // CloseDB closes the database connection
 func CloseDB() {
 	if db != nil {
