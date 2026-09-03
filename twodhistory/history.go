@@ -131,10 +131,16 @@ func DateExists(date string) (bool, error) {
 
 // GetAllHistory retrieves all history records ordered by date DESC
 func GetAllHistory() ([]TwoDHistory, error) {
+	if db == nil {
+		return nil, fmt.Errorf("database not initialized")
+	}
+
 	query := `
-	SELECT id, date, set1200, value1200, result1200,
-	       set430, value430, result430,
-	       modern930, internet930, modern200, internet200,
+	SELECT id, date,
+	       COALESCE(set1200, ''), COALESCE(value1200, ''), COALESCE(result1200, ''),
+	       COALESCE(set430, ''), COALESCE(value430, ''), COALESCE(result430, ''),
+	       COALESCE(modern930, ''), COALESCE(internet930, ''),
+	       COALESCE(modern200, ''), COALESCE(internet200, ''),
 	       created_at
 	FROM twodhistory
 	ORDER BY date DESC
@@ -146,17 +152,22 @@ func GetAllHistory() ([]TwoDHistory, error) {
 	}
 	defer rows.Close()
 
-	var histories []TwoDHistory
+	histories := make([]TwoDHistory, 0)
 	for rows.Next() {
 		var h TwoDHistory
+		var createdAt sql.NullTime
 		err := rows.Scan(
 			&h.ID, &h.Date, &h.Set1200, &h.Value1200, &h.Result1200,
 			&h.Set430, &h.Value430, &h.Result430,
 			&h.Modern930, &h.Internet930, &h.Modern200, &h.Internet200,
-			&h.CreatedAt,
+			&createdAt,
 		)
 		if err != nil {
-			return nil, fmt.Errorf("failed to scan row: %w", err)
+			log.Printf("⚠️  skip history row: %v", err)
+			continue
+		}
+		if createdAt.Valid {
+			h.CreatedAt = createdAt.Time
 		}
 		histories = append(histories, h)
 	}

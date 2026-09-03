@@ -8,7 +8,25 @@ import (
 	"strings"
 
 	_ "github.com/lib/pq"
+	_ "github.com/mattn/go-sqlite3"
 )
+
+// ConnectSQLite opens the production sqlite file used by api.atth.online.
+func ConnectSQLite(path string) (*sql.DB, error) {
+	if path == "" {
+		path = "./thaimaster2d.db"
+	}
+	database, err := sql.Open("sqlite3", path+"?_busy_timeout=8000&_foreign_keys=on")
+	if err != nil {
+		return nil, fmt.Errorf("open sqlite: %w", err)
+	}
+	if err := database.Ping(); err != nil {
+		database.Close()
+		return nil, fmt.Errorf("ping sqlite: %w", err)
+	}
+	log.Printf("✅ SQLite ready: %s", path)
+	return database, nil
+}
 
 // Connect connects to PostgreSQL, auto-creates the database if it doesn't exist,
 // runs all table migrations, and returns the ready *sql.DB connection.

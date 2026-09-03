@@ -1,6 +1,7 @@
 package main
 
 import (
+	"database/sql"
 	"fmt"
 	"log"
 	"os"
@@ -40,17 +41,22 @@ func main() {
 		c.Next()
 	})
 
-	// Initialize database — auto-creates DB + runs all migrations on startup
-	dbURL := os.Getenv("DATABASE_URL")
-	if dbURL == "" {
-		// Default local PostgreSQL connection string
-		dbURL = "postgres://postgres:postgres@localhost/thaimaster2d?sslmode=disable"
-	}
-
-	log.Printf("🔌 Connecting to PostgreSQL...")
-
+	// DATABASE_URL → PostgreSQL. Otherwise SQLite (api.atth.online production).
+	log.Printf("🔌 Attempting database connection...")
 	dbEnabled := false
-	database, err := dbpkg.Connect(dbURL)
+	var database *sql.DB
+	var err error
+	if pgURL := os.Getenv("DATABASE_URL"); pgURL != "" {
+		log.Printf("📍 PostgreSQL via DATABASE_URL")
+		database, err = dbpkg.Connect(pgURL)
+	} else {
+		dbPath := os.Getenv("DATABASE_PATH")
+		if dbPath == "" {
+			dbPath = "./thaimaster2d.db"
+		}
+		log.Printf("📂 SQLite: %s", dbPath)
+		database, err = dbpkg.ConnectSQLite(dbPath)
+	}
 	if err != nil {
 		log.Printf("❌ Database initialization failed: %v", err)
 		log.Println("⚠️  Continuing without database features...")
@@ -58,9 +64,7 @@ func main() {
 	} else {
 		defer database.Close()
 		dbEnabled = true
-		log.Println("✅ Database connected and all migrations applied!")
-
-		// Initialize all modules with the shared DB connection
+		log.Println("✅ Database connected!")
 		twodhistory.InitDB(database)
 		gift.InitDB(database)
 		slider.InitDB(database)
@@ -341,14 +345,12 @@ func main() {
 		c.HTML(200, "index.html", nil)
 	})
 
-	// Start server
-	log.Println("🚀 Server starting on :8080")
-	log.Println("📡 SSE Stream available at: http://localhost:8080/api/game/stream")
-	log.Println("📮 POST game data to: http://localhost:8080/api/game/update")
-	log.Println("📜 History data at: http://localhost:8080/api/game/history")
-	log.Println("📡 New stream (11:00 & 3:00) SSE at: http://localhost:8080/api/game/stream/new")
-	log.Println("📮 POST new stream data to: http://localhost:8080/api/game/update/new")
-	if err := r.Run(":8080"); err != nil {
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
+	log.Printf("🚀 Server starting on :%s", port)
+	if err := r.Run(":" + port); err != nil {
 		log.Fatal("Failed to start server:", err)
 	}
 }
